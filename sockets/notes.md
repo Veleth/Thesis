@@ -2,6 +2,7 @@
 
 ## To - dos
 
+- Client/server comms: dual-thread operation. A dedicated listener thread in each client and sender loop (Observer pattern?)
 - Server waiting for response
 - Client able to send from stdin
 - Introduce communication + protocol
@@ -14,6 +15,7 @@
 - Server command to get logs and check
 - Optional: HTTP client as well
 - Optional: Dummies and unit testing
+- User name / room collision
 
 ## Things to keep in mind/clarify later
 
