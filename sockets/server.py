@@ -1,11 +1,25 @@
-import socket, threading
+import socket, threading, names, datetime, sys
 from user import User
+from names import MESSAGE_DELIMITER, MESSAGE_END
 
 HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 8000        # Port to listen on (non-privileged ports are > 1023)
 
 rooms = {}
 clients = []
+
+LOGFILE=sys.stdout #open('server.log', 'a')
+
+def send_room(room, message, players = None):
+    for player in rooms[room]:
+        if (players == None or player in players):
+            player.conn.sendall(message)
+
+def compose(header, args):
+    msg = header
+    for arg in args:
+        msg += str(MESSAGE_DELIMITER+arg)
+    msg+=MESSAGE_END
 
 def handle(data, conn):
     print(repr(data))
@@ -19,8 +33,8 @@ def on_new_connection(conn, addr):
     global rooms
     global clients
     user = User(conn, addr)
-    with conn:
-        print('Connected by', addr)
+    with conn: #TODO: Init player and add to room
+        print(datetime.datetime.now(), ': Connected by', addr, file=LOGFILE)
         try:
             while True:
                 data = conn.recv(1024)
