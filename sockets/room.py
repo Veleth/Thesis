@@ -1,7 +1,73 @@
+from enum import Enum
 class Room:
-    def __init__(self):
+    def __init__(self, number):
+        self.number = number
         self.players = []
-        self.results = []
-        self.variables = []
-        self.traces = []
+        self.results = {}
+        self.values = {}
+        self.traces = {}
         self.missing = 0
+        self.state = State.IDLE
+
+    def add_player(self, player):
+        self.players.append(player)
+
+    def remove_player(self, player):
+        #TODO: DEL
+        if player in self.results.keys():
+            del self.results[player]
+        if player in self.values.keys():
+            del self.values[player]
+        if player in self.traces.keys():
+            del self.traces[player]
+        self.players.remove(player)
+
+    def get_players(self):
+        return self.players
+
+    def add_result(self, player, result):
+        self.results[player] = result
+    
+    def clear_results(self):
+        self.results = {}
+
+    def get_results(self):
+        return list(self.results.values())
+
+    def add_value(self, player, value):
+        self.values[player] = value
+
+    def clear_values(self):
+        self.values = {}
+
+    def get_values(self):
+        return list(self.values.values())
+
+    def add_trace(self, player, trace):
+        self.traces[player] = trace
+
+    def clear_traces(self):
+        self.traces = {}
+
+    def get_traces(self):
+        return list(self.traces.values())
+    
+    def clear(self):
+        self.clear_results()
+        self.clear_traces()
+        self.clear_values()
+
+    def get_number(self):
+        return self.number
+
+    def get_state(self):
+        return self.state
+    
+    def set_state(self, state):
+        self.state = state
+
+class State(Enum):
+    IDLE = 1
+    ROLL = 2
+    RESULT = 3
+    TRACE = 4
