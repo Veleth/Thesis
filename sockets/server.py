@@ -25,9 +25,17 @@ class Server:
             if action == '1':
                 message = 'CHAT|Player1|Catch me if u can\\'
             elif action == '2':
-                message = 'ROLL|Player2\\' #TODO: Ideas for improvement
+                message = 'ROLL|Player2\\' #TODO: Ideas for improvement: add involved players and die size
             elif action == '3':
                 message = 'VAL|a8993|abc339\\'
+            elif action == '4':
+                message = 'RES|2|2|2|2\\'
+            elif action == '5':
+                message = 'RES|2|1|3|3|2\\'
+            elif action == '6':
+                message = 'TRC|Abc:12+22mod5=4|CDE:21-3mod7=4\\'
+            elif action == '7':
+                pass
             else:
                 message = action
             
@@ -136,7 +144,8 @@ class Server:
         pass
 
     def chat(self, message, user):
-        pass
+        room = user.room
+        self.send_room(room, message)
     
     def result(self, message, user):
         room = user.room
@@ -145,13 +154,21 @@ class Server:
             user.result = result
             room.results[user] = result
             if len(room.get_players()) == len(room.get_results()): 
-                print(f'completeR: {room.get_results()}') #TODO: result stop and check             pass
-            print(room.get_results())
+                print(f'completeR: {room.get_results()}') #TODO: result stop and check         
+                print(room.get_results())
             room.clear()
-
         pass
 
     def trace(self, message, user):
+        room = user.room
+        trace = message[1]
+        if True: #TODO: if value.isnumeric():
+            user.result = result
+            room.results[user] = result
+            if len(room.get_players()) == len(room.get_results()): 
+                print(f'completeR: {room.get_results()}') #TODO: result stop and check         
+                print(room.get_results())
+            room.clear()
         pass
 
     def val(self, message, user):

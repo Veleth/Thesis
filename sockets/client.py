@@ -1,9 +1,12 @@
 import socket, time, threading, hashlib, sys, random
 from communication import *
+from collections import Counter
+from gui import GUI
 
 class Client:
     def __init__(self, HOST, PORT):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.gui = GUI()
         self.sock.connect((HOST, PORT))
         self.LOGFILE = open("app.log", "a") #TODO: Modify the values
         self.room = None
@@ -12,6 +15,7 @@ class Client:
         self.ownValue = None
         self.ownResult = None
         self.ownTrace = None
+        self.traces = []
         self.dispatch = {
             INIT_HEADER : self.init,
             ROLL_HEADER : self.roll,
@@ -40,7 +44,6 @@ class Client:
             else:
                 raise UndefinedHeaderException(m[0])
 
-
     def recv(self):
         while True:
             data = self.sock.recv(128)
@@ -58,6 +61,12 @@ class Client:
 
     def validated_chat(self, message):
         return message.replace(MESSAGE_END, '').replace(MESSAGE_DELIMITER, '')
+
+    def clear(self):
+        self.ownValue = None
+        self.ownResult = None
+        self.ownTrace = None
+        self.traces = []
 
     """
     The following functions are responses to certain message headers and will be invoked
@@ -88,22 +97,38 @@ class Client:
         self.print(f'{message[1]}: {message[2]}')
 
     """Players' results""" 
-    def result(self):
+    def result(self, message):
+        #server -> client ['RES', '{result1}', '{result2}', ...]
+        results = [int(res) for res in message[1:]]
+        if self.ownResult in results:   # If our value is in results
+            if (len(set(results)) == 1):  # If all results are the same #TODO: possibly move functionality to server
+                self.print(f'The result is {self.ownResult}')
+            else:
+                self.print(f'Something went wrong and not everyone has the same result. They are as follows (result: number of occurences): {dict(Counter(results))}')
+                #str(dict).replace(', ','\r\n').replace("u'","").replace("'","")[1:-1] or https://stackoverflow.com/questions/17330139/python-printing-a-dictionary-as-a-horizontal-table-with-headers
+            
+        else:
+            self.print(f'Your result {self.ownResult} is not present in results from server: {results}')
         pass
 
     """Players' values"""
     def val(self, message):
         print(message)
         if True: #value in values:
-            #calculate shiiiit
-            result = 2
-            message = compose(RESULT_HEADER, [result])
+            #calculate stuff, create trace
+            result = 2 #TODO: remove temporary stub
+            self.ownResult = result
+            self.ownTrace = 'avavav'
+            message = compose(RESULT_HEADER, [self.ownResult])
+            message += compose(TRACE_HEADER, [self.ownTrace])
             self.sock.sendall(message)
         else:
             self.displayPrompt(f'ERROR: Your value {self.ownValue} not present in {message}')
 
     """Players' traces"""    
-    def trace(self):
+    def trace(self, message):
+        for trace in message[1:]:
+            self.traces += trace 
         pass
 
     """Info from server, handle basically like chat"""
@@ -114,22 +139,39 @@ class Client:
 
     """
     Client-GUI functionality that is called by the above functions.
-    They serve as a bridge between the visual side and the backend of the application
+    They serve as a bridge between the visual side and the backend of the application.
+    They are also useful for decoupling GUI for testing purposes.
     """
 
     def print(self, message):
-        print(f'self print: {message}')
-        #TODO: gui.display(format(msg))
+        if self.gui:
+            pass
+            #TODO: gui.display(format(msg))
+        else:
+            print(f'self print: {message}')
 
     def getMsg(self):
-        pass
+        if self.gui:
+            pass
+            #TODO: gui.getfromfield
+        else:
+            pass
+            #some input()
 
     def getInput(self):
-        pass
+        if self.gui:
+            pass
+            #TODO: gui.getfromfield
+        else:
+            pass
+            #some input()
 
     def displayPrompt(self, prompt):
-        print(f'prompt: {prompt}')
-        pass
+        if self.gui:
+            pass
+            #TODO: gui.prompt
+        else:
+            print(f'prompt: {prompt}')
 
 
 client = Client('127.0.0.1', 8000)
