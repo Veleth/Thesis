@@ -1,17 +1,14 @@
 import socket, time, threading, hashlib, sys, random
 from communication import *
 from collections import Counter
-from gui import GUI
 
 class Client:
-    def __init__(self, HOST, PORT):
+    def __init__(self, HOST, PORT, username, room, gui=None):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.gui = GUI()
+        self.gui = gui
         self.sock.connect((HOST, PORT))
-        self.LOGFILE = open("app.log", "a") #TODO: Modify the values
-        self.room = None
-        self.max = None
-        self.username = None
+        self.room = room
+        self.username = username
         self.ownValue = None
         self.ownResult = None
         self.ownTrace = None
@@ -76,10 +73,6 @@ class Client:
 
     """Initializes the user by selecting a room and username"""
     def init(self): #TODO: Later change to user-entered
-        room = 22 #self.validated_input("Enter the number of the room: ")
-        self.room = room
-        username = str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5])#self.validated_input("Enter your username")    
-        self.username = username
         message = compose(INIT_HEADER, [room, username])
         self.sock.sendall(message)
     
@@ -173,5 +166,6 @@ class Client:
         else:
             print(f'prompt: {prompt}')
 
-
-client = Client('127.0.0.1', 8000)
+#TODO: Remove later
+if __name__=='__main__':
+    client = Client('127.0.0.1', 8000, username = str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]), room=22)

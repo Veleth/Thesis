@@ -1,5 +1,5 @@
 # BSc Thesis notes
-
+https://www.youtube.com/watch?v=D8-snVfekto for layout
 ## To - dos
 
 - Client able to send from stdin, chat
