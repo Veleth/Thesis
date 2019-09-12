@@ -19,16 +19,15 @@ class GUI():
         canvas.pack() 
         
         self._frame = None
-        self.switch_frame(LoginFrame)
-
+        # self.switch_frame(LoginFrame)
+        self.launchClient(host='192.168.1.23', port=8000, username=str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]) , room='22')#TODO: Remove
         self.window.mainloop()
 
     def launchClient(self, host, port, username, room):
+        self.client = Client(host, int(port), username, room, gui=self)
+        # #TODO: Something went wrong OR Welcome to the server
         self.switch_frame(ApplicationFrame)
         self.window.geometry('480x720')
-        # self.client = Client(host, int(port), username, room, gui=self)
-        # #TODO: Something went wrong OR Welcome to the server
-        # self.changeView()
 
     def switch_frame(self, frame_class):
         new_frame = frame_class(self.window, self)
@@ -36,6 +35,10 @@ class GUI():
             self._frame.destroy()
         self._frame = new_frame
         self._frame.place(relx=0.05, rely=0.05, relwidth=0.9, relheight=0.9)
+
+    def print(self, message):
+        #Todo: check if application frame
+        self._frame.print(message)
 
 class LoginFrame(Frame):
     def __init__(self, master, gui):
@@ -64,8 +67,8 @@ class LoginFrame(Frame):
         self.button = Button(self, text='Go!', command=self.login_btn_clicked)
         self.button.grid(columnspan=2)
 
-        #Later remove
-        self.entry_host.insert(0, '127.0.0.1')
+        #TODO: Later remove
+        self.entry_host.insert(0, '192.168.1.23')
         self.entry_port.insert(0, '8000')
         self.entry_username.insert(0, str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]))
         self.entry_room.insert(0, '22')
@@ -83,6 +86,12 @@ class ApplicationFrame(Frame):
         super().__init__(master, bg='#ABABAB')
         self.gui = gui
 
+        self.textFrame = Frame(self)
+        self.textFrame.place(rely=0.05, relwidth=1, relheight=0.5)
+        self.makeTextArea(self.textFrame)
+
+        for i in range(100):
+            self.print(f'AB{str(i)}')
         #     #self initialform
     #     messages_frame = Frame(self.window)
     #     message = StringVar()
@@ -114,6 +123,24 @@ class ApplicationFrame(Frame):
     #     # if msg == "{quit}":
     #     #     client_socket.close()
     #     #     top.quit()
+
+    def print(self, message):
+        # msg = message if message.endswith('\n') else f'{message}\n'
+        self.text.config(state=NORMAL)
+        self.text.insert(END, message if message.endswith('\n') else f'{message}\n')
+        self.text.config(state=DISABLED)
+
+
+    def makeTextArea(self, master):
+        self.text = Text(master)
+        self.scrollbar = Scrollbar(master)
+        self.text.place(relwidth=0.95, relheight=0.95)
+        self.scrollbar.place(relx=0.95, relwidth=0.05, relheight=1)
+        self.text.config(yscrollcommand=self.scrollbar.set, state=DISABLED)
+        self.scrollbar.config(command=self.text.yview)
+
+        self.entry = Entry(master)
+        self.entry.place(relwidth=0.95, rely=0.95, relheight=0.05)
 
 if __name__ == '__main__':
     GUI()

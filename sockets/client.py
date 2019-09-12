@@ -35,13 +35,16 @@ class Client:
         messages = decompose(data)
         print(messages)
         for message in messages:
-            m = list(filter(None, message.split(MESSAGE_DELIMITER)))
-            if m[0] in self.dispatch.keys():
-                self.dispatch[m[0]](m)
-            else:
-                raise UndefinedHeaderException(m[0])
+            try:
+                m = list(filter(None, message.split(MESSAGE_DELIMITER)))
+                if m[0] in self.dispatch.keys():
+                    self.dispatch[m[0]](m)
+                else:
+                    raise UndefinedHeaderException(m[0])
+            except:
+                exit(2)
 
-    def recv(self):
+    def recv(self): #TODO: change to non-blocking
         while True:
             data = self.sock.recv(128)
             if not data:
@@ -73,7 +76,7 @@ class Client:
 
     """Initializes the user by selecting a room and username"""
     def init(self): #TODO: Later change to user-entered
-        message = compose(INIT_HEADER, [room, username])
+        message = compose(INIT_HEADER, [self.room, self.username])
         self.sock.sendall(message)
     
     """Call to roll by GM"""
@@ -140,6 +143,7 @@ class Client:
         if self.gui:
             pass
             #TODO: gui.display(format(msg))
+            gui.print(message)
         else:
             print(f'self print: {message}')
 
@@ -163,9 +167,10 @@ class Client:
         if self.gui:
             pass
             #TODO: gui.prompt
+            gui.print(prompt)
         else:
             print(f'prompt: {prompt}')
 
 #TODO: Remove later
 if __name__=='__main__':
-    client = Client('127.0.0.1', 8000, username = str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]), room=22)
+    client = Client('192.168.1.23', 8000, username = str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]), room=22)

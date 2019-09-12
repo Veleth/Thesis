@@ -5,7 +5,7 @@ from communication import *
 
 class Server:
     def __init__(self, HOST, PORT, LOGFILE=sys.stdout):
-        self.HOST = HOST     # Standard loopback interface address (localhost)
+        self.HOST = HOST     
         self.PORT = PORT     # Port to listen on (non-privileged ports are > 1023)
         self.rooms = {}
         self.LOGFILE = LOGFILE
@@ -19,6 +19,9 @@ class Server:
         }
         self.run()
 
+    def shutdown(self):
+        print(f'Shutting down..')
+        exit()
     def sender(self): #TODO: For testing purposes; Remove afterwards
         while True:
             action = input()
@@ -44,17 +47,22 @@ class Server:
                     player.conn.sendall(message.encode())
 
     def run(self):
-        threading.Thread(target=self.sender).start()
+        threading.Thread(target=self.sender, daemon=True).start()
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.setblocking(False)
             s.bind((self.HOST, self.PORT))
             s.listen()
             while True:
                 try:
                     conn, addr = s.accept()
-                    threading.Thread(target=self.on_new_connection, args=(conn, addr)).start()
-                except KeyboardInterrupt:
-                    print('Over')
-                    exit()
+                    threading.Thread(target=self.on_new_connection, args=(conn, addr), daemon=True).start()
+                except BlockingIOError:
+                    try:
+                        time.sleep(1)
+                    except (KeyboardInterrupt, SystemExit):
+                        self.shutdown()
+                except (KeyboardInterrupt, SystemExit):
+                    self.shutdown()
 
     def send_room(self, room, message, players = None):
         for player in room.get_players():
@@ -85,6 +93,7 @@ class Server:
 
     def on_new_connection(self, conn, addr):
         user = User(conn, addr)
+        conn.setblocking(True)
         with conn: #Start listening for messages
             print(f'{datetime.datetime.now()} : Connected by {addr}', file=self.LOGFILE)
             try:
@@ -150,7 +159,7 @@ class Server:
     def result(self, message, user):
         room = user.room
         result = message[1]
-        if True: #TODO: if value.isnumeric():
+        if True: #TODO: if value.isnumeric(): and state validation
             user.result = result
             room.results[user] = result
             if len(room.get_players()) == len(room.get_results()): 
@@ -162,17 +171,16 @@ class Server:
     def trace(self, message, user):
         room = user.room
         trace = message[1]
-        if True: #TODO: if value.isnumeric():
-            user.result = result
-            room.results[user] = result
-            if len(room.get_players()) == len(room.get_results()): 
-                print(f'completeR: {room.get_results()}') #TODO: result stop and check         
-                print(room.get_results())
+        if True: #TODO: state validation
+            user.trace = trace
+            room.traces[user] = trace
+            if len(room.get_players()) == len(room.get_traces()): 
+                print(f'completeR: {room.get_traces()}') #TODO: trace stop and send to all         
+                print(room.get_traces())
             room.clear()
         pass
 
     def val(self, message, user):
         pass
 
-server = Server('127.0.0.1', 8000)
-        # self.LOGFILE=sys.stdout #open('server.log', 'a')
+server = Server('192.168.1.23', 8000)
