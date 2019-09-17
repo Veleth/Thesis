@@ -4,14 +4,17 @@ from collections import Counter
 
 class Client:
     def __init__(self, HOST, PORT, username, room, gui=None):
+        #TODO: Add GM indication
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.gui = gui
         self.sock.connect((HOST, PORT))
         self.room = room
         self.username = username
+        self.isGM = False
         self.ownValue = None
         self.ownResult = None
         self.ownTrace = None
+        self.rng = random.SystemRandom()
         self.traces = []
         self.dispatch = {
             INIT_HEADER : self.init,
@@ -20,13 +23,13 @@ class Client:
             RESULT_HEADER : self.result,
             VAL_HEADER : self.val,
             TRACE_HEADER : self.trace,
-            INFO_HEADER : self.info
+            INFO_HEADER : self.info,
+            NEW_USER_HEADER : self.newUser,
+            DROPPED_USER_HEADER : self.droppedUser,
         }
-        initializer = threading.Thread(target=self.init)
+        initializer = threading.Thread(target=self.init, daemon=True)
         initializer.start()
-        # # initializer.join()
-        threading.Thread(target=self.recv).start()
-        # threading.Thread(target=self.send_loop).start()  
+        threading.Thread(target=self.recv, daemon=False).start()
 
     def send_loop(self):
         self.sock.sendall(input().encode())
@@ -82,10 +85,8 @@ class Client:
     """Call to roll by GM"""
     def roll(self, message): #TODO: Input and randomness, use the message
         self.print(f'INFO: A roll has been called, enter your random variable') 
-        value = hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:8]#input()   
-        print(value)
-        message = compose(ROLL_HEADER, [value]) #TODO: randomize calculations
-        self.sock.sendall(message)
+        timeout,  maxNum = message[1:]
+        self.getInput(int(timeout), int(maxNum))
 
     """Chat messages"""
     def chat(self, message):
@@ -132,6 +133,15 @@ class Client:
         #INFO MESSAGE STRUCTURE ['INFO', "$info_message" (1 or more)]
         self.print(f'INFO: {" ".join(message[1:])}')  
 
+    def newUser(self, message):
+        username = message[1]
+        self.print(f'INFO: {username} has joined the room')
+        self.gui.userAdd(username)
+
+    def droppedUser(self, message):
+        username = message[1]
+        self.print(f'INFO: {username} has left the room')
+        self.gui.userRemove(username)
 
     """
     Client-GUI functionality that is called by the above functions.
@@ -143,22 +153,13 @@ class Client:
         if self.gui:
             pass
             #TODO: gui.display(format(msg))
-            gui.print(message)
+            self.gui.print(message)
         else:
-            print(f'self print: {message}')
+            print(f'Text Area Print: {message}')
 
-    def getMsg(self):
+    def getInput(self, timeout, maxNum):
         if self.gui:
-            pass
-            #TODO: gui.getfromfield
-        else:
-            pass
-            #some input()
-
-    def getInput(self):
-        if self.gui:
-            pass
-            #TODO: gui.getfromfield
+            self.gui.getUserValue(timeout, maxNum)
         else:
             pass
             #some input()
@@ -171,6 +172,26 @@ class Client:
         else:
             print(f'prompt: {prompt}')
 
+    """
+    Client functionality called by the GUI
+    """
+
+    def sendChat(self, message):
+        print(f'Chatsend message {message}')
+        message = compose(CHAT_HEADER, [self.username, message])
+        self.sock.sendall(message)
+
+    def sendValue(self, seed):
+        self.ownValue = hashlib.sha256(f'{time.time()}{self.rng.random()}{seed}'.encode()).hexdigest()
+        message = compose(ROLL_HEADER, [self.ownValue])
+        self.print(f'DEBUG: value sent - {self.ownValue}')
+        self.sock.sendall(message)
+
+    def getRandomValue(self):
+        if self.ownValue:
+            return hashlib.sha256(f'{time.time()}{self.rng.random()}{self.ownValue}'.encode()).hexdigest() 
+        return hashlib.sha256(f'{self.rng.random()}{time.time()}{self.rng.random()}'.encode()).hexdigest()
+
 #TODO: Remove later
 if __name__=='__main__':
-    client = Client('192.168.1.23', 8000, username = str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]), room=22)
+    client = Client(IPADDR, 8000, username = str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]), room=22)

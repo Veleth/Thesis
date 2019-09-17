@@ -28,7 +28,7 @@ class Server:
             if action == '1':
                 message = 'CHAT|Player1|Catch me if u can\\'
             elif action == '2':
-                message = 'ROLL|Player2\\' #TODO: Ideas for improvement: add involved players and die size
+                message = 'ROLL|5|6\\' #TODO: Ideas for improvement: add involved players and die size
             elif action == '3':
                 message = 'VAL|a8993|abc339\\'
             elif action == '4':
@@ -65,6 +65,7 @@ class Server:
                     self.shutdown()
 
     def send_room(self, room, message, players = None):
+        print(message)
         for player in room.get_players():
             if (players == None or player in players):
                 player.conn.sendall(message) #TODO: Extend
@@ -154,6 +155,7 @@ class Server:
 
     def chat(self, message, user):
         room = user.room
+        message = compose(CHAT_HEADER, message[1:])
         self.send_room(room, message)
     
     def result(self, message, user):
@@ -183,4 +185,4 @@ class Server:
     def val(self, message, user):
         pass
 
-server = Server('192.168.1.23', 8000)
+server = Server(IPADDR, 8000)

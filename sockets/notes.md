@@ -1,15 +1,17 @@
 # BSc Thesis notes
 https://www.youtube.com/watch?v=D8-snVfekto for layout
 ## To - dos
-
-- Client able to send from stdin, chat
-- Prepare commands
 - Client: Calculation trace logging
 - Server command to get logs and check
-- GUI client
 - Optional: Dummies and unit testing
 - Polish: User name / room collision (init fault?)
 - Polish: commands (!roll !)
-- Error codes : client->server
+
+GUI: Player list and command buttons
+
+GM dropping
+Player dropping
+Late messages(after timeout)
+Server exception handling
 
 ## Things to keep in mind/clarify later

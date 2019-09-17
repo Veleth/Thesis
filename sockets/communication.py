@@ -15,8 +15,8 @@ HELP_COMMAND = '!help'      # See available commands
 COMMANDS = [ROLL_COMMAND, TRACE_COMMAND, HELP_COMMAND]
 
 INIT_HEADER = 'INIT'    # For server: Initialization request, for client: confirmation and response
-                        # server -> client - Automatic call upon successful connection
                         # client -> server ['INIT', '{room_number}', '{name}']
+                        # server -> client ['INIT', '{room_number}', '{name}', '{isGM}']
                         #TODO: confirmation on client side
 
 ROLL_HEADER = 'ROLL'    # For server: Call to roll by a GM, for client: Call to send their randomness   
@@ -39,13 +39,21 @@ TRACE_HEADER = 'TRC'    # For server: trace from a player, for client: trace fro
 
 VAL_HEADER = 'VAL'      # For client: Random values from all the users
                         # server -> client ['VAL', '{value1}', '{value2}', ...] #TODO: Implement
-                        # client -> server ['VAL', '{value}']                   #TODO: Implement
 
 INFO_HEADER = 'INFO'    # Only client - Info from server, like chat
                         # server -> client ['INFO', '{message}']
 
+#TODO: implement
+NEW_USER_HEADER = 'NUSR' # Only server -> client, like info 
+                         # ['NUSR', '{username}']
+
+DROPPED_USER_HEADER = 'DUSR' # Only server -> client, like info
+                             # ['DUSR', '{username}']
+
 HEADERS = [INIT_HEADER, ROLL_HEADER, CHAT_HEADER, RESULT_HEADER, 
-TRACE_HEADER, VAL_HEADER, INFO_HEADER]
+TRACE_HEADER, VAL_HEADER, INFO_HEADER, NEW_USER_HEADER, DROPPED_USER_HEADER]
+
+IPADDR='127.0.0.1'#TODO: Remove IP
 
 def compose(header, args):
     msg = header

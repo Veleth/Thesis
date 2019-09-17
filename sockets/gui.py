@@ -1,6 +1,8 @@
 from tkinter import *
 from client import Client
-
+import threading
+#TODO: remove
+from communication import *
 #temporary
 import hashlib
 import time
@@ -8,19 +10,18 @@ import random
 
 # https://medium.com/swlh/lets-write-a-chat-app-in-python-f6783a9ac170
 # http://effbot.org/tkinterbook/button.htm
-
 class GUI():
     def __init__(self):
         self.window = Tk()
         self.window.title('Login screen')
         self.window.resizable(False,False)
-
+        self.window.protocol("WM_DELETE_WINDOW", self.exit)
         canvas = Canvas(self.window, height=360, width=360)
         canvas.pack() 
         
         self._frame = None
         # self.switch_frame(LoginFrame)
-        self.launchClient(host='192.168.1.23', port=8000, username=str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]) , room='22')#TODO: Remove
+        self.launchClient(host=IPADDR, port=8000, username=str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]) , room='22')#TODO: Remove
         self.window.mainloop()
 
     def launchClient(self, host, port, username, room):
@@ -39,6 +40,51 @@ class GUI():
     def print(self, message):
         #Todo: check if application frame
         self._frame.print(message)
+
+    def sendChat(self, message):
+        self.client.sendChat(message)
+    
+    def sendValue(self, value):
+        return self.client.sendValue(value)
+
+    def getHeader(self):
+        return f'{self.client.username} (GM) - Room {self.client.room}' if self.client.isGM else f'{self.client.username} - Room {self.client.room}'
+
+    def isGM(self):
+        return self.client.isGM
+
+    def getUserValue(self, timeout, max):
+        #TODO: do something with max
+        #check frame
+        thread = threading.Thread(target=self._frame.getUserValue, daemon=True)
+        thread.start()
+        thread.join(timeout=timeout)
+        if self._frame.entryDone.get():
+            pass
+        else:
+            self._frame.sendValue(self.client.getRandomValue())
+
+
+
+    # def userAdd(self, username):
+    #     #Todo: check if application frame
+    #     users = self._frame.getUsers()
+    #     users.append(username)
+    #     self._frame.updateUserList(users)
+
+    # def userRemove(self, username):
+    #     users = self._frame.getUsers()
+    #     users.remove(username) #TODO: safe remove
+    #     self._frame.updateUserList(users)
+    #     #Todo: check if application frame
+
+
+    def exit(self):
+        #remove client too
+        self.client.sock.close()
+        self.window.destroy()
+        exit()
+        pass
 
 class LoginFrame(Frame):
     def __init__(self, master, gui):
@@ -68,7 +114,7 @@ class LoginFrame(Frame):
         self.button.grid(columnspan=2)
 
         #TODO: Later remove
-        self.entry_host.insert(0, '192.168.1.23')
+        self.entry_host.insert(0, IPADDR)
         self.entry_port.insert(0, '8000')
         self.entry_username.insert(0, str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]))
         self.entry_room.insert(0, '22')
@@ -86,50 +132,47 @@ class ApplicationFrame(Frame):
         super().__init__(master, bg='#ABABAB')
         self.gui = gui
 
+        self.headerFrame = Frame(self)
+        self.headerFrame.place(relwidth=1, relheight=0.05)
+        self.makeHeader(self.headerFrame)
+
         self.textFrame = Frame(self)
         self.textFrame.place(rely=0.05, relwidth=1, relheight=0.5)
         self.makeTextArea(self.textFrame)
 
-        for i in range(100):
-            self.print(f'AB{str(i)}')
-        #     #self initialform
-    #     messages_frame = Frame(self.window)
-    #     message = StringVar()
-    #     message.set('Typee here')
-    #     scrollbar = Scrollbar(messages_frame)
+        self.inputFrame = Frame(self)
+        self.inputFrame.place(rely=0.75, relwidth=1, relheight=0.1)
+        self.makeInputArea(self.inputFrame)
 
-    #     msg_list = Listbox(messages_frame, height=15, width=50, yscrollcommand=scrollbar.set)
-    #     scrollbar.pack(side=RIGHT, fill=Y)
-    #     msg_list.pack(side=LEFT, fill=BOTH)
-    #     msg_list.pack()
+    def sendChat(self, event):
+        chat = self.chatEntry.get().replace(MESSAGE_DELIMITER,'').replace(MESSAGE_END, '')
+        if chat:
+            self.gui.sendChat(chat)
+            self.chatEntry.delete(0, END)
+    
+    def sendValue(self, override=None):
+        self.entryDone.set(True)
+        self.valEntry.config(state=DISABLED)
+        value = override or self.valEntry.get().replace(MESSAGE_DELIMITER,'').replace(MESSAGE_END, '')
+        if value:
+            randomness = self.gui.sendValue(value)
+            self.valEntry.delete(0, END)
+            #TODO: prompt or something
 
-    #     entry_field = Entry(self.window, textvariable=message)
-    #     entry_field.bind("<Return>", self.send)
-    #     entry_field.pack()
-    #     send_button = Button(self.window, text="Send", command=self.send)
-    #     send_button.pack()
-
-    #     messages_frame.pack()
-    #     label = Label(self.window, text="ez")
-    #     label.pack()
-    #     self.window.mainloop()
-        
-
-    # def send(self, event=None):  # event is passed by binders.
-    #     """Handles sending of messages."""
-    #     msg = message.get()
-    #     message.set("")  # Clears input field.
-    #     print(msg)
-    #     # if msg == "{quit}":
-    #     #     client_socket.close()
-    #     #     top.quit()
+    def getUserValue(self):
+        self.entryDone.set(False)
+        self.valEntry.config(state=NORMAL)
+        self.valLabel.config(text='Enter your randomness')
+        self.wait_variable(self.entryDone)
 
     def print(self, message):
-        # msg = message if message.endswith('\n') else f'{message}\n'
         self.text.config(state=NORMAL)
         self.text.insert(END, message if message.endswith('\n') else f'{message}\n')
         self.text.config(state=DISABLED)
 
+    def makeHeader(self, master):
+        self.header = Label(master, text=self.gui.getHeader(), font=('Helvetica', 16))
+        self.header.pack()
 
     def makeTextArea(self, master):
         self.text = Text(master)
@@ -139,8 +182,21 @@ class ApplicationFrame(Frame):
         self.text.config(yscrollcommand=self.scrollbar.set, state=DISABLED)
         self.scrollbar.config(command=self.text.yview)
 
-        self.entry = Entry(master)
-        self.entry.place(relwidth=0.95, rely=0.95, relheight=0.05)
+        self.chatEntry = Entry(master)
+        self.chatEntry.place(relwidth=0.95, rely=0.95, relheight=0.05)
+        self.chatEntry.bind('<Return>', self.sendChat)
+
+    def makeInputArea(self, master):
+        self.valEntry = Entry(master, state=DISABLED)
+        self.valEntry.pack()
+        self.valEntry.bind('<Return>', self.sendValue)
+
+        self.valLabel = Label(master, text='ABC')
+        self.valLabel.pack()
+        self.entryDone = BooleanVar(False)
+
+
+    # def makeUserList(self, master):
 
 if __name__ == '__main__':
     GUI()
