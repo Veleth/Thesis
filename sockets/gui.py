@@ -144,6 +144,10 @@ class ApplicationFrame(Frame):
         self.inputFrame.place(rely=0.75, relwidth=1, relheight=0.1)
         self.makeInputArea(self.inputFrame)
 
+        self.exitFrame = Frame(self)
+        self.exitFrame.place(rely=0.9, relwidth=1, relheight=0.1)
+        self.makeExitArea(self.exitFrame)
+
     def sendChat(self, event):
         chat = self.chatEntry.get().replace(MESSAGE_DELIMITER,'').replace(MESSAGE_END, '')
         if chat:
@@ -194,6 +198,10 @@ class ApplicationFrame(Frame):
         self.valLabel = Label(master, text='ABC')
         self.valLabel.pack()
         self.entryDone = BooleanVar(False)
+
+    def makeExitArea(self, master):
+        self.exitBtn = Button(master, text='Exit/Logout', command=self.gui.exit)
+        self.exitBtn.pack()
 
 
     # def makeUserList(self, master):

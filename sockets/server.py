@@ -22,6 +22,7 @@ class Server:
     def shutdown(self):
         print(f'Shutting down..')
         exit()
+
     def sender(self): #TODO: For testing purposes; Remove afterwards
         while True:
             action = input()
@@ -47,6 +48,7 @@ class Server:
                     player.conn.sendall(message.encode())
 
     def run(self):
+        print(f'Server up and running. Listening at port {self.PORT}')
         threading.Thread(target=self.sender, daemon=True).start()
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.setblocking(False)
@@ -64,14 +66,24 @@ class Server:
                 except (KeyboardInterrupt, SystemExit):
                     self.shutdown()
 
+    """ Sends message to a given room, optional parameter
+    is the recipient list, by default everyone is a recipient """
     def send_room(self, room, message, players = None):
-        print(message)
         for player in room.get_players():
             if (players == None or player in players):
                 player.conn.sendall(message) #TODO: Extend
     
+    def send_series_room(self, room, messages, players = None):
+        for player in room.get_players():
+            if (players == None or player in players):
+                self.send_series(player, messages) #TODO: Extend
+
     def send_message(self, player, message):
         player.conn.sendall(message)
+
+    def send_series(self, player, messages):
+        for message in messages:
+            self.send_message(player, message)
 
     def list_players(self, room):
         lst = []
@@ -99,7 +111,7 @@ class Server:
             print(f'{datetime.datetime.now()} : Connected by {addr}', file=self.LOGFILE)
             try:
                 while True:
-                    data = conn.recv(128)
+                    data = conn.recv(2048)
                     if not data:
                        break
                     self.handle(data, conn, user)
@@ -126,7 +138,7 @@ class Server:
                     # name taken TODO: collision elimination
                     username = str(username+"_"+hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5])
             newUser.name = username
-            msg = f'{username} has joined the room!'
+            msg = f'{username} has joined the room!' #TODO: change to nusr
             self.send_room(room, compose(INFO_HEADER,[msg]))
             msg = f'Players in this room: {self.list_players(room)}'
             self.send_message(newUser, compose(INFO_HEADER,[msg]))
@@ -141,16 +153,7 @@ class Server:
             #TODO: msg+= "Use roll to roll"
             self.send_message(newUser, compose(INFO_HEADER,[msg]))
 
-    def roll(self, message, user):
-        room = user.room
-        value = message[1]
-        if True: #TODO: room.get_state() == State.ROLL:
-            user.value = value
-            room.values[user] = value
-            if len(room.get_players()) == len(room.get_values()): 
-                print(f'complete: {room.get_values()}') #TODO: roll stop and go on
-                pass
-            print(room.get_values())
+    def roll(self, message, user): #TODO: roll invocation by GM
         pass
 
     def chat(self, message, user):
@@ -161,28 +164,36 @@ class Server:
     def result(self, message, user):
         room = user.room
         result = message[1]
-        if True: #TODO: if value.isnumeric(): and state validation
+        if True: #TODO: if value.isnumeric(): and state/user validation
             user.result = result
             room.results[user] = result
             if len(room.get_players()) == len(room.get_results()): 
                 print(f'completeR: {room.get_results()}') #TODO: result stop and check         
                 print(room.get_results())
-            room.clear()
+                room.clear()
         pass
 
     def trace(self, message, user):
         room = user.room
         trace = message[1]
-        if True: #TODO: state validation
+        if True: #TODO: state/user validation
             user.trace = trace
             room.traces[user] = trace
             if len(room.get_players()) == len(room.get_traces()): 
                 print(f'completeR: {room.get_traces()}') #TODO: trace stop and send to all         
                 print(room.get_traces())
-            room.clear()
         pass
 
     def val(self, message, user):
-        pass
+        room = user.room
+        value = message[1]
+        if True: #TODO: room.get_state() == State.ROLL: and user validation
+            user.value = value
+            room.values[user] = value
+            if len(room.get_players()) == len(room.get_values()): #TODO: Change to participating players in this function, result(), and trace()
+                print(f'DEBUG [VAL]: All values received')
+                values = room.get_values()
+                room.set_state(State.RESULT)
+                self.send_room(room, compose(VAL_HEADER, values))
 
 server = Server(IPADDR, 8000)

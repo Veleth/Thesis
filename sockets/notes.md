@@ -8,10 +8,12 @@ https://www.youtube.com/watch?v=D8-snVfekto for layout
 - Polish: commands (!roll !)
 
 GUI: Player list and command buttons
+Client-side command validation
 
 GM dropping
-Player dropping
+Player dropping (change scope from entire room to 'participants')
 Late messages(after timeout)
 Server exception handling
 
+Message length - limitation: possibly get the client to recieve parts of the message separately?
 ## Things to keep in mind/clarify later

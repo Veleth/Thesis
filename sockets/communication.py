@@ -20,30 +20,29 @@ INIT_HEADER = 'INIT'    # For server: Initialization request, for client: confir
                         #TODO: confirmation on client side
 
 ROLL_HEADER = 'ROLL'    # For server: Call to roll by a GM, for client: Call to send their randomness   
-                        # server -> client ['ROLL', '{timeout}', '{max}'] #TODO: Implement
+                        # server -> client ['ROLL', '{timeout}', '{max}'] 
                         # client -> server ['ROLL', '{value}']
-                        #TODO: Implement, handle D/C
+                        #TODO: Handle d/c
 
 CHAT_HEADER = 'CHAT'    # For server: relay the message to others in the room, for client: get chat message
-                        # both ways ['CHAT', '{name}', '{message}'] #TODO: Implement on server
-                        #TODO: adapt to GUI
+                        # both ways ['CHAT', '{name}', '{message}']  on server
 
 RESULT_HEADER = 'RES'   # For server: result from a player, for client: result from other players
-                        # server -> client ['RES', '{result1}', '{result2}', ...] #TODO: Implement
-                        # client -> server ['RES', '{result}']                    #TODO: Implement
+                        # server -> client ['RES', '{result1}', '{result2}', ...] 
+                        # client -> server ['RES', '{result}']                    
 
 TRACE_HEADER = 'TRC'    # For server: trace from a player, for client: trace from others
-                        # server -> client ['TRC', '{trace1}', '{trace2}'] (log) #TODO: Implement
+                        # server -> client ['TRC', '{trace1}', '{trace2}'] (log) 
                         # client -> server ['ROLL', '{trace}']
-                        #TODO: Implement
 
-VAL_HEADER = 'VAL'      # For client: Random values from all the users
-                        # server -> client ['VAL', '{value1}', '{value2}', ...] #TODO: Implement
+VAL_HEADER = 'VAL'      # For server: Random value from the user, for client: Random values from all the users
+                        # client -> server ['VAL', {value}]
+                        # server -> client ['VAL', '{value1}', '{value2}', ...]
 
 INFO_HEADER = 'INFO'    # Only client - Info from server, like chat
                         # server -> client ['INFO', '{message}']
 
-#TODO: implement
+#TODO: Implement
 NEW_USER_HEADER = 'NUSR' # Only server -> client, like info 
                          # ['NUSR', '{username}']
 

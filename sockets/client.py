@@ -10,6 +10,7 @@ class Client:
         self.sock.connect((HOST, PORT))
         self.room = room
         self.username = username
+        self.maxNum = 0 # Current max roll
         self.isGM = False
         self.ownValue = None
         self.ownResult = None
@@ -49,7 +50,7 @@ class Client:
 
     def recv(self): #TODO: change to non-blocking
         while True:
-            data = self.sock.recv(128)
+            data = self.sock.recv(2048) #TODO: change if 
             if not data:
                 break
             self.handle(data)
@@ -71,6 +72,12 @@ class Client:
         self.ownTrace = None
         self.traces = []
 
+    def calculate(self, values, maxNum): #TODO: improve and refine
+        s = sum([int(v, 16) for v in values])
+        self.ownResult = s%maxNum or maxNum #if 0 then maxNum
+        #TODO: Clarify in the string
+        self.ownTrace = f'The values: {values}\n, the sum: {s}, mod {maxNum} equals to {self.ownResult}'
+
     """
     The following functions are responses to certain message headers and will be invoked
     when a message is recieved. The exception is init(), which is automatically called upon
@@ -86,6 +93,7 @@ class Client:
     def roll(self, message): #TODO: Input and randomness, use the message
         self.print(f'INFO: A roll has been called, enter your random variable') 
         timeout,  maxNum = message[1:]
+        self.maxNum = int(maxNum)
         self.getInput(int(timeout), int(maxNum))
 
     """Chat messages"""
@@ -110,17 +118,13 @@ class Client:
 
     """Players' values"""
     def val(self, message):
-        print(message)
-        if True: #value in values:
-            #calculate stuff, create trace
-            result = 2 #TODO: remove temporary stub
-            self.ownResult = result
-            self.ownTrace = 'avavav'
+        values = message[1:]
+        if True: #TODO value in values:
+            self.calculate(values, self.maxNum)
             message = compose(RESULT_HEADER, [self.ownResult])
-            message += compose(TRACE_HEADER, [self.ownTrace])
             self.sock.sendall(message)
         else:
-            self.displayPrompt(f'ERROR: Your value {self.ownValue} not present in {message}')
+            self.print(f'ERROR: Your value {self.ownValue} not present in {message}')
 
     """Players' traces"""    
     def trace(self, message):
@@ -151,8 +155,6 @@ class Client:
 
     def print(self, message):
         if self.gui:
-            pass
-            #TODO: gui.display(format(msg))
             self.gui.print(message)
         else:
             print(f'Text Area Print: {message}')
@@ -161,16 +163,7 @@ class Client:
         if self.gui:
             self.gui.getUserValue(timeout, maxNum)
         else:
-            pass
-            #some input()
-
-    def displayPrompt(self, prompt):
-        if self.gui:
-            pass
-            #TODO: gui.prompt
-            gui.print(prompt)
-        else:
-            print(f'prompt: {prompt}')
+            pass 
 
     """
     Client functionality called by the GUI
@@ -183,7 +176,7 @@ class Client:
 
     def sendValue(self, seed):
         self.ownValue = hashlib.sha256(f'{time.time()}{self.rng.random()}{seed}'.encode()).hexdigest()
-        message = compose(ROLL_HEADER, [self.ownValue])
+        message = compose(VAL_HEADER, [self.ownValue])
         self.print(f'DEBUG: value sent - {self.ownValue}')
         self.sock.sendall(message)
 
