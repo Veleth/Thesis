@@ -15,7 +15,8 @@ class Server:
             CHAT_HEADER : self.chat,
             RESULT_HEADER : self.result,
             TRACE_HEADER : self.trace,
-            VAL_HEADER : self.val
+            VAL_HEADER : self.val,
+            USER_LIST_HEADER : self.userList
         }
         self.run()
 
@@ -27,13 +28,13 @@ class Server:
         while True:
             action = input()
             if action == '1':
-                message = 'CHAT|Player1|Catch me if u can\\'
+                message = 'CHAT|Player1|Generic message\\'
             elif action == '2':
                 message = 'ROLL|5|6\\' #TODO: Ideas for improvement: add involved players and die size
             elif action == '3':
                 message = 'VAL|a8993|abc339\\'
             elif action == '4':
-                message = 'RES|2|2|2|2\\'
+                message = 'RES|2|2\\'
             elif action == '5':
                 message = 'RES|2|1|3|3|2\\'
             elif action == '6':
@@ -42,8 +43,9 @@ class Server:
                 pass
             else:
                 message = action
-            
             for room in self.rooms.values():
+                room.clear()
+                room.start_action()
                 for player in room.get_players():
                     player.conn.sendall(message.encode())
 
@@ -57,7 +59,7 @@ class Server:
             while True:
                 try:
                     conn, addr = s.accept()
-                    threading.Thread(target=self.on_new_connection, args=(conn, addr), daemon=True).start()
+                    threading.Thread(target=self.onNewConnection, args=(conn, addr), daemon=True).start()
                 except BlockingIOError:
                     try:
                         time.sleep(1)
@@ -68,31 +70,31 @@ class Server:
 
     """ Sends message to a given room, optional parameter
     is the recipient list, by default everyone is a recipient """
-    def send_room(self, room, message, players = None):
+    def sendRoom(self, room, message, players = None):
         for player in room.get_players():
             if (players == None or player in players):
                 player.conn.sendall(message) #TODO: Extend
     
-    def send_series_room(self, room, messages, players = None):
+    def sendSeriesRoom(self, room, messages, players = None):
         for player in room.get_players():
             if (players == None or player in players):
-                self.send_series(player, messages) #TODO: Extend
+                self.sendSeries(player, messages) #TODO: Extend
 
-    def send_message(self, player, message):
+    def sendMessage(self, player, message):
         player.conn.sendall(message)
 
-    def send_series(self, player, messages):
+    def sendSeries(self, player, messages):
         for message in messages:
-            self.send_message(player, message)
+            self.sendMessage(player, message)
 
-    def list_players(self, room):
+    def listPlayers(self, room):
         lst = []
         for player in room.get_players():
             if player.is_GM:
-                lst.append(f'{player.name} (GM)')
+                lst.append(f'{player.name}(GM)')
             elif player.name:
                 lst.append(f'{player.name}')
-        return ', '.join(lst)
+        return lst
 
     def handle(self, data, conn, user):
         messages = decompose(data)
@@ -104,7 +106,7 @@ class Server:
             else:
                 raise UndefinedHeaderException(m[0])
 
-    def on_new_connection(self, conn, addr):
+    def onNewConnection(self, conn, addr):
         user = User(conn, addr)
         conn.setblocking(True)
         with conn: #Start listening for messages
@@ -119,11 +121,16 @@ class Server:
                 print(f'ConnectionResetError: {addr} forcibly disconnected', file=self.LOGFILE)
             finally:
                 #Remove the client from their room
+                room = user.room
+                name = user.name
                 if user.room is not None: #TODO: What if gm leaves?
                     user.room.remove_player(user)
                     #If the room has been emptied
                     if not user.room.get_players():
                         del self.rooms[user.room.get_number()] #VOLATILE #or self.rooms.pop(user.room)
+                    else:
+                        self.sendRoom(room, compose(DROPPED_USER_HEADER, [name]))
+                        self.sendRoom(room, compose(USER_LIST_HEADER, self.listPlayers(room)))
 
     def init(self, message, newUser):
         #INIT MESSAGE STRUCTURE ['INIT', '{room_number}', '{name}']
@@ -138,10 +145,7 @@ class Server:
                     # name taken TODO: collision elimination
                     username = str(username+"_"+hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5])
             newUser.name = username
-            msg = f'{username} has joined the room!' #TODO: change to nusr
-            self.send_room(room, compose(INFO_HEADER,[msg]))
-            msg = f'Players in this room: {self.list_players(room)}'
-            self.send_message(newUser, compose(INFO_HEADER,[msg]))
+            self.sendMessage(newUser, compose(INIT_HEADER, [room_number, username, 0]))
         else:
             room = Room(room_number)
             self.rooms[room_number] = room
@@ -149,17 +153,20 @@ class Server:
             newUser.name = username
             newUser.is_GM = True
             room.add_player(newUser)
-            msg = f'You have joined the room {room.get_number()} as a GM\n'
-            #TODO: msg+= "Use roll to roll"
-            self.send_message(newUser, compose(INFO_HEADER,[msg]))
+            self.sendMessage(newUser, compose(INIT_HEADER, [room_number, username, 1]))
+        self.sendRoom(room, compose(NEW_USER_HEADER,[username]))
+        self.sendRoom(room, compose(USER_LIST_HEADER, self.listPlayers(room)))
 
     def roll(self, message, user): #TODO: roll invocation by GM
+        room = user.room
+        room.clear()
+        room.start_action()
         pass
 
     def chat(self, message, user):
         room = user.room
         message = compose(CHAT_HEADER, message[1:])
-        self.send_room(room, message)
+        self.sendRoom(room, message)
     
     def result(self, message, user):
         room = user.room
@@ -167,11 +174,16 @@ class Server:
         if True: #TODO: if value.isnumeric(): and state/user validation
             user.result = result
             room.results[user] = result
-            if len(room.get_players()) == len(room.get_results()): 
-                print(f'completeR: {room.get_results()}') #TODO: result stop and check         
-                print(room.get_results())
-                room.clear()
-        pass
+            self.resultSender(room)
+        else:
+            print(f'ERROR [RES]: {message} \nnot accepted for {user.name} in room {room}')
+
+    def resultSender(self, room):
+        if len(room.get_players()) == len(room.get_results()): #TODO: get participants
+            print(f'DEBUG [RES]: All results received')
+            results = room.get_results()
+            room.set_state(State.IDLE)
+            self.sendRoom(room, compose(RESULT_HEADER, results))                      
 
     def trace(self, message, user):
         room = user.room
@@ -179,10 +191,16 @@ class Server:
         if True: #TODO: state/user validation
             user.trace = trace
             room.traces[user] = trace
-            if len(room.get_players()) == len(room.get_traces()): 
-                print(f'completeR: {room.get_traces()}') #TODO: trace stop and send to all         
-                print(room.get_traces())
-        pass
+            self.traceSender(room)
+        else:
+            print(f'ERROR [TRACE]: {message} \nnot accepted for {user.name} in room {room}')
+
+    def traceSender(self, room):
+        if len(room.get_players()) == len(room.get_traces()): 
+            print(f'DEBUG [TRACE]: All values received') #TODO: trace stop and send to all         
+            traces = room.get_traces()
+            # room.set_state(State.IDLE)
+            self.sendRoom(room, compose(TRACE_HEADER, traces))
 
     def val(self, message, user):
         room = user.room
@@ -190,10 +208,18 @@ class Server:
         if True: #TODO: room.get_state() == State.ROLL: and user validation
             user.value = value
             room.values[user] = value
-            if len(room.get_players()) == len(room.get_values()): #TODO: Change to participating players in this function, result(), and trace()
-                print(f'DEBUG [VAL]: All values received')
-                values = room.get_values()
-                room.set_state(State.RESULT)
-                self.send_room(room, compose(VAL_HEADER, values))
+            self.valSender(room)
+        else:
+            print(f'ERROR [VAL]: {message} \nnot accepted for {user.name} in room {room}')
+    
+    def valSender(self, room):
+        if len(room.get_players()) == len(room.get_values()): #TODO: Change to participating players in this function, result(), and trace()
+            print(f'DEBUG [VAL]: All values received')
+            values = room.get_values()
+            room.set_state(State.RESULT)
+            self.sendRoom(room, compose(VAL_HEADER, values))
+
+    def userList(self, message, user):
+        self.sendMessage(user, compose(USER_LIST_HEADER, self.listPlayers(user.room)))
 
 server = Server(IPADDR, 8000)

@@ -27,13 +27,15 @@ class Client:
             INFO_HEADER : self.info,
             NEW_USER_HEADER : self.newUser,
             DROPPED_USER_HEADER : self.droppedUser,
+            USER_LIST_HEADER : self.userList
         }
-        initializer = threading.Thread(target=self.init, daemon=True)
+        initializer = threading.Thread(target=self.initialize, daemon=True)
         initializer.start()
         threading.Thread(target=self.recv, daemon=False).start()
 
-    def send_loop(self):
-        self.sock.sendall(input().encode())
+    def initialize(self):
+        message = compose(INIT_HEADER, [self.room, self.username])
+        self.sock.sendall(message)
 
     def handle(self, data):
         messages = decompose(data)
@@ -75,6 +77,7 @@ class Client:
     def calculate(self, values, maxNum): #TODO: improve and refine
         s = sum([int(v, 16) for v in values])
         self.ownResult = s%maxNum or maxNum #if 0 then maxNum
+        print(f'Result: {self.ownResult}')
         #TODO: Clarify in the string
         self.ownTrace = f'The values: {values}\n, the sum: {s}, mod {maxNum} equals to {self.ownResult}'
 
@@ -85,12 +88,16 @@ class Client:
     """
 
     """Initializes the user by selecting a room and username"""
-    def init(self): #TODO: Later change to user-entered
-        message = compose(INIT_HEADER, [self.room, self.username])
-        self.sock.sendall(message)
+    def init(self, message): # TODO: Handle errors etc
+        self.room = message[1]
+        self.username = message[2]
+        self.isGM = bool(int(message[3]))
+        breakpoint()
+        print(message)
+        pass        
     
     """Call to roll by GM"""
-    def roll(self, message): #TODO: Input and randomness, use the message
+    def roll(self, message):
         self.print(f'INFO: A roll has been called, enter your random variable') 
         timeout,  maxNum = message[1:]
         self.maxNum = int(maxNum)
@@ -98,7 +105,7 @@ class Client:
 
     """Chat messages"""
     def chat(self, message):
-        #CHAT MESSAGE STRUCTURE ['CHAT', "$player", "$chat_message"]
+        #server -> client ['CHAT', "$player", "$chat_message"]
         self.print(f'{message[1]}: {message[2]}')
 
     """Players' results""" 
@@ -111,7 +118,6 @@ class Client:
             else:
                 self.print(f'Something went wrong and not everyone has the same result. They are as follows (result: number of occurences): {dict(Counter(results))}')
                 #str(dict).replace(', ','\r\n').replace("u'","").replace("'","")[1:-1] or https://stackoverflow.com/questions/17330139/python-printing-a-dictionary-as-a-horizontal-table-with-headers
-            
         else:
             self.print(f'Your result {self.ownResult} is not present in results from server: {results}')
         pass
@@ -132,6 +138,12 @@ class Client:
             self.traces += trace 
         pass
 
+    def userList(self, message):
+        users = message[1:]
+        self.gui.setUserList(users)
+        #TODO: remove
+        self.print(f'User list: {users}')
+
     """Info from server, handle basically like chat"""
     def info(self, message):
         #INFO MESSAGE STRUCTURE ['INFO', "$info_message" (1 or more)]
@@ -140,12 +152,10 @@ class Client:
     def newUser(self, message):
         username = message[1]
         self.print(f'INFO: {username} has joined the room')
-        self.gui.userAdd(username)
 
     def droppedUser(self, message):
         username = message[1]
         self.print(f'INFO: {username} has left the room')
-        self.gui.userRemove(username)
 
     """
     Client-GUI functionality that is called by the above functions.

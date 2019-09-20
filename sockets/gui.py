@@ -64,20 +64,9 @@ class GUI():
         else:
             self._frame.sendValue(self.client.getRandomValue())
 
-
-
-    # def userAdd(self, username):
-    #     #Todo: check if application frame
-    #     users = self._frame.getUsers()
-    #     users.append(username)
-    #     self._frame.updateUserList(users)
-
-    # def userRemove(self, username):
-    #     users = self._frame.getUsers()
-    #     users.remove(username) #TODO: safe remove
-    #     self._frame.updateUserList(users)
-    #     #Todo: check if application frame
-
+    def setUserList(self, users):
+        #TODO: check if application frame
+        self._frame.setUserList(users)
 
     def exit(self):
         #remove client too
@@ -86,51 +75,11 @@ class GUI():
         exit()
         pass
 
-class LoginFrame(Frame):
-    def __init__(self, master, gui):
-        super().__init__(master, bg='#0FACD0')
-        self.gui = gui
-
-        self.label_host = Label(self, text="Host", font=('Helvetica', 16))
-        self.label_port = Label(self, text="Port")
-        self.label_username = Label(self, text="Username")
-        self.label_room = Label(self, text="Room")
-
-        self.entry_host = Entry(self)
-        self.entry_port = Entry(self)
-        self.entry_username = Entry(self)
-        self.entry_room = Entry(self)
-        self.label_host.grid(row=0, sticky=E)
-        self.label_port.grid(row=1, sticky=E)
-        self.label_username.grid(row=2, sticky=E)
-        self.label_room.grid(row=3, sticky=E)
-
-        self.entry_host.grid(row=0, column=1)
-        self.entry_port.grid(row=1, column=1)
-        self.entry_username.grid(row=2, column=1)
-        self.entry_room.grid(row=3, column=1)
-
-        self.button = Button(self, text='Go!', command=self.login_btn_clicked)
-        self.button.grid(columnspan=2)
-
-        #TODO: Later remove
-        self.entry_host.insert(0, IPADDR)
-        self.entry_port.insert(0, '8000')
-        self.entry_username.insert(0, str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]))
-        self.entry_room.insert(0, '22')
-
-    def login_btn_clicked(self):
-        #TODO: Validate data
-        host = self.entry_host.get()
-        port = self.entry_port.get()
-        username = self.entry_username.get()
-        room = self.entry_room.get()
-        self.gui.launchClient(host,port,username,room)
-
 class ApplicationFrame(Frame):
     def __init__(self, master, gui):
         super().__init__(master, bg='#ABABAB')
         self.gui = gui
+        self.users = []
 
         self.headerFrame = Frame(self)
         self.headerFrame.place(relwidth=1, relheight=0.05)
@@ -169,6 +118,16 @@ class ApplicationFrame(Frame):
         self.valLabel.config(text='Enter your randomness')
         self.wait_variable(self.entryDone)
 
+    def getUsers(self):
+        return self.users
+
+    def updateUserList(self):
+        pass #TODO: add functionality
+
+    def setUserList(self, users):
+        self.users = users
+        self.updateUserList()
+
     def print(self, message):
         self.text.config(state=NORMAL)
         self.text.insert(END, message if message.endswith('\n') else f'{message}\n')
@@ -205,6 +164,47 @@ class ApplicationFrame(Frame):
 
 
     # def makeUserList(self, master):
+
+class LoginFrame(Frame):
+    def __init__(self, master, gui):
+        super().__init__(master, bg='#0FACD0')
+        self.gui = gui
+
+        self.labelHost = Label(self, text="Host", font=('Helvetica', 16))
+        self.labelPort = Label(self, text="Port")
+        self.labelUsername = Label(self, text="Username")
+        self.labelRoom = Label(self, text="Room")
+
+        self.entryHost = Entry(self)
+        self.entryPort = Entry(self)
+        self.entryUsername = Entry(self)
+        self.entryRoom = Entry(self)
+        self.labelHost.grid(row=0, sticky=E)
+        self.labelPort.grid(row=1, sticky=E)
+        self.labelUsername.grid(row=2, sticky=E)
+        self.labelRoom.grid(row=3, sticky=E)
+
+        self.entryHost.grid(row=0, column=1)
+        self.entryPort.grid(row=1, column=1)
+        self.entryUsername.grid(row=2, column=1)
+        self.entryRoom.grid(row=3, column=1)
+
+        self.button = Button(self, text='Go!', command=self.loginButtonClicked)
+        self.button.grid(columnspan=2)
+
+        #TODO: Later remove
+        self.entryHost.insert(0, IPADDR)
+        self.entryPort.insert(0, '8000')
+        self.entryUsername.insert(0, str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]))
+        self.entryRoom.insert(0, '22')
+
+    def loginButtonClicked(self):
+        #TODO: Validate data
+        host = self.entryHost.get()
+        port = self.entryPort.get()
+        username = self.entryUsername.get()
+        room = self.entryRoom.get()
+        self.gui.launchClient(host,port,username,room)
 
 if __name__ == '__main__':
     GUI()

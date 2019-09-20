@@ -3,6 +3,7 @@ class Room:
     def __init__(self, number):
         self.number = number
         self.players = []
+        self.participants = []
         self.results = {}
         self.values = {}
         self.traces = {}
@@ -13,17 +14,27 @@ class Room:
         self.players.append(player)
 
     def remove_player(self, player):
-        #TODO: DEL
         if player in self.results.keys():
             del self.results[player]
         if player in self.values.keys():
             del self.values[player]
         if player in self.traces.keys():
             del self.traces[player]
+        if player in self.participants:
+            self.participants.remove(player)
         self.players.remove(player)
 
     def get_players(self):
         return self.players
+
+    def start_action(self):
+        self.participants = self.players.copy()
+
+    def get_participants(self):
+        return self.participants
+
+    def clear_participants(self):
+        self.participants = []
 
     def add_result(self, player, result):
         self.results[player] = result
@@ -56,6 +67,7 @@ class Room:
         self.clear_results()
         self.clear_traces()
         self.clear_values()
+        self.clear_participants()
 
     def get_number(self):
         return self.number

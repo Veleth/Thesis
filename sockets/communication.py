@@ -42,15 +42,19 @@ VAL_HEADER = 'VAL'      # For server: Random value from the user, for client: Ra
 INFO_HEADER = 'INFO'    # Only client - Info from server, like chat
                         # server -> client ['INFO', '{message}']
 
-#TODO: Implement
 NEW_USER_HEADER = 'NUSR' # Only server -> client, like info 
                          # ['NUSR', '{username}']
 
 DROPPED_USER_HEADER = 'DUSR' # Only server -> client, like info
                              # ['DUSR', '{username}']
 
+USER_LIST_HEADER = 'LIST' # For client : user list from the server, for server: list request from the client
+                          # client -> server ['LIST']
+                          # server -> client ['LIST', '{username1}', '{username2}', ...]
+
 HEADERS = [INIT_HEADER, ROLL_HEADER, CHAT_HEADER, RESULT_HEADER, 
-TRACE_HEADER, VAL_HEADER, INFO_HEADER, NEW_USER_HEADER, DROPPED_USER_HEADER]
+TRACE_HEADER, VAL_HEADER, INFO_HEADER, NEW_USER_HEADER, DROPPED_USER_HEADER,
+USER_LIST_HEADER]
 
 IPADDR='127.0.0.1'#TODO: Remove IP
 
