@@ -18,7 +18,5 @@ Message length - limitation: possibly get the client to recieve parts of the mes
 Dropout - what if first, what if middle, what if last? What if GM?
 
 ## ROADMAP:
-Sat - GM init and string, further dropout
-Sun - Mild input validation on login screen, username collision regex (name end or _), user list display
-Mon - GM dropout, roll invocation function
-Tue - 
+Mon - GM dropout, roll invocation function, input validation on login screen (with prompts)
+Tue - user list selection?

@@ -88,13 +88,11 @@ class Client:
     """
 
     """Initializes the user by selecting a room and username"""
-    def init(self, message): # TODO: Handle errors etc
+    def init(self, message):
         self.room = message[1]
         self.username = message[2]
         self.isGM = bool(int(message[3]))
-        breakpoint()
-        print(message)
-        pass        
+        self.gui.refreshHeader()
     
     """Call to roll by GM"""
     def roll(self, message):
@@ -141,8 +139,7 @@ class Client:
     def userList(self, message):
         users = message[1:]
         self.gui.setUserList(users)
-        #TODO: remove
-        self.print(f'User list: {users}')
+
 
     """Info from server, handle basically like chat"""
     def info(self, message):

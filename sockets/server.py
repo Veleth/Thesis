@@ -1,4 +1,4 @@
-import socket, threading, time, datetime, sys, hashlib, random
+import socket, threading, time, datetime, sys, hashlib, random, re
 from user import User
 from room import Room, State
 from communication import *
@@ -139,11 +139,11 @@ class Server:
         if room_number in self.rooms:
             room = self.rooms[room_number]
             newUser.room = room
-            room.add_player(newUser)
             for user in room.get_players():
                 if user.name == username and user is not newUser:
-                    # name taken TODO: collision elimination
-                    username = str(username+"_"+hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5])
+                    username = f'{username}_{self.getUsernameNumber(username, room.get_players())}'
+                    break
+            room.add_player(newUser)
             newUser.name = username
             self.sendMessage(newUser, compose(INIT_HEADER, [room_number, username, 0]))
         else:
@@ -221,5 +221,10 @@ class Server:
 
     def userList(self, message, user):
         self.sendMessage(user, compose(USER_LIST_HEADER, self.listPlayers(user.room)))
+
+    def getUsernameNumber(self, username, players):
+        names = [player.name for player in players]
+        pattern = re.compile(r'^{0}(_\d+)?$'.format(username))
+        return sum([1 if pattern.match(name) else 0 for name in names])
 
 server = Server(IPADDR, 8000)

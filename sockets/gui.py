@@ -7,7 +7,7 @@ from communication import *
 import hashlib
 import time
 import random
-
+# https://stackoverflow.com/questions/4770993/how-can-i-make-silent-exceptions-louder-in-tkinter
 # https://medium.com/swlh/lets-write-a-chat-app-in-python-f6783a9ac170
 # http://effbot.org/tkinterbook/button.htm
 class GUI():
@@ -17,7 +17,7 @@ class GUI():
         self.window.resizable(False,False)
         self.window.protocol("WM_DELETE_WINDOW", self.exit)
         canvas = Canvas(self.window, height=360, width=360)
-        canvas.pack() 
+        canvas.pack()
         
         self._frame = None
         # self.switch_frame(LoginFrame)
@@ -46,6 +46,10 @@ class GUI():
     
     def sendValue(self, value):
         return self.client.sendValue(value)
+
+    def refreshHeader(self):
+        #TODO: check if application frame
+        self._frame.setHeader(self.getHeader())
 
     def getHeader(self):
         return f'{self.client.username} (GM) - Room {self.client.room}' if self.client.isGM else f'{self.client.username} - Room {self.client.room}'
@@ -90,8 +94,12 @@ class ApplicationFrame(Frame):
         self.makeTextArea(self.textFrame)
 
         self.inputFrame = Frame(self)
-        self.inputFrame.place(rely=0.75, relwidth=1, relheight=0.1)
+        self.inputFrame.place(rely=0.55, relwidth=0.5, relheight=0.35)
         self.makeInputArea(self.inputFrame)
+
+        self.userListFrame = Frame(self)
+        self.userListFrame.place(rely=0.55, relx=0.5, relwidth=0.5, relheight=0.35)
+        self.makeUserList(self.userListFrame)
 
         self.exitFrame = Frame(self)
         self.exitFrame.place(rely=0.9, relwidth=1, relheight=0.1)
@@ -122,9 +130,15 @@ class ApplicationFrame(Frame):
         return self.users
 
     def updateUserList(self):
-        pass #TODO: add functionality
-
+        self.userList.config(state=NORMAL)
+        self.userList.delete(1.0, END)
+        for user in self.users:
+            self.userList.insert(END, f'{user}\n')
+        self.userList.delete('end-1c', 'end')
+        self.userList.config(state=DISABLED)
+    
     def setUserList(self, users):
+        print(users)
         self.users = users
         self.updateUserList()
 
@@ -132,10 +146,14 @@ class ApplicationFrame(Frame):
         self.text.config(state=NORMAL)
         self.text.insert(END, message if message.endswith('\n') else f'{message}\n')
         self.text.config(state=DISABLED)
+        self.text.yview_pickplace('end') 
 
     def makeHeader(self, master):
         self.header = Label(master, text=self.gui.getHeader(), font=('Helvetica', 16))
         self.header.pack()
+
+    def setHeader(self, text):
+        self.header.config(text=text)
 
     def makeTextArea(self, master):
         self.text = Text(master)
@@ -158,12 +176,19 @@ class ApplicationFrame(Frame):
         self.valLabel.pack()
         self.entryDone = BooleanVar(False)
 
+    def makeUserList(self, master):
+        self.userList = Text(master)
+        self.userListScrollbar = Scrollbar(master)
+        self.userList.place(relwidth=0.95, relheight=1)
+        self.userListScrollbar.place(relx=0.95, relwidth=0.05, relheight=1)
+        self.userList.config(yscrollcommand=self.userListScrollbar.set, state=DISABLED)
+        self.userListScrollbar.config(command=self.userList.yview)
+
     def makeExitArea(self, master):
         self.exitBtn = Button(master, text='Exit/Logout', command=self.gui.exit)
         self.exitBtn.pack()
 
 
-    # def makeUserList(self, master):
 
 class LoginFrame(Frame):
     def __init__(self, master, gui):
