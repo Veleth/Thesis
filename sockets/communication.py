@@ -17,23 +17,25 @@ COMMANDS = [ROLL_COMMAND, TRACE_COMMAND, HELP_COMMAND]
 INIT_HEADER = 'INIT'    # For server: Initialization request, for client: confirmation and response
                         # client -> server ['INIT', '{room_number}', '{name}']
                         # server -> client ['INIT', '{room_number}', '{name}', '{isGM}']
-                        #TODO: confirmation on client side
 
 ROLL_HEADER = 'ROLL'    # For server: Call to roll by a GM, for client: Call to send their randomness   
                         # server -> client ['ROLL', '{timeout}', '{max}'] 
-                        # client -> server ['ROLL', '{value}']
+                        # client -> server ['ROLL', '{timeout}', '{max}']
                         #TODO: Handle d/c
 
 CHAT_HEADER = 'CHAT'    # For server: relay the message to others in the room, for client: get chat message
-                        # both ways ['CHAT', '{name}', '{message}']  on server
+                        # server -> client ['CHAT', '{name}', '{message}']
+                        # client -> server ['CHAT', '{name}', '{message}']
 
 RESULT_HEADER = 'RES'   # For server: result from a player, for client: result from other players
                         # server -> client ['RES', '{result1}', '{result2}', ...] 
-                        # client -> server ['RES', '{result}']                    
+                        # client -> server ['RES', '{result}']
+                        #TODO maybe: split s->c into multiple               
 
 TRACE_HEADER = 'TRC'    # For server: trace from a player, for client: trace from others
                         # server -> client ['TRC', '{trace1}', '{trace2}'] (log) 
                         # client -> server ['ROLL', '{trace}']
+                        #TODO maybe: split s->c into multiple               
 
 VAL_HEADER = 'VAL'      # For server: Random value from the user, for client: Random values from all the users
                         # client -> server ['VAL', {value}]

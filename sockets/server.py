@@ -157,11 +157,18 @@ class Server:
         self.sendRoom(room, compose(NEW_USER_HEADER,[username]))
         self.sendRoom(room, compose(USER_LIST_HEADER, self.listPlayers(room)))
 
-    def roll(self, message, user): #TODO: roll invocation by GM
+    def roll(self, message, user):
         room = user.room
-        room.clear()
-        room.start_action()
-        pass
+        if user.is_GM:
+            if True: #TODO: if room.get_state is idle
+                room.clear()
+                room.start_action()
+                room.set_state(State.ROLL)
+                timeout = int(message[1])
+                maxNum = int(message[2])
+                msg = compose(ROLL_HEADER, [timeout, maxNum])
+            else:
+                print(f'ERROR [ROLL]: {message} recieved during state {room.get_state()} in room {room}')
 
     def chat(self, message, user):
         room = user.room

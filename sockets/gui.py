@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import messagebox
 from client import Client
 import threading
 #TODO: remove
@@ -20,15 +21,22 @@ class GUI():
         canvas.pack()
         
         self._frame = None
-        # self.switch_frame(LoginFrame)
+        self.switch_frame(LoginFrame)
         self.launchClient(host=IPADDR, port=8000, username=str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]) , room='22')#TODO: Remove
         self.window.mainloop()
 
     def launchClient(self, host, port, username, room):
-        self.client = Client(host, int(port), username, room, gui=self)
-        # #TODO: Something went wrong OR Welcome to the server
-        self.switch_frame(ApplicationFrame)
-        self.window.geometry('480x720')
+        try:
+            self.client = Client(host, int(port), username, room, gui=self)
+            self.switch_frame(ApplicationFrame)
+            self.window.geometry('480x720')
+        except:
+            self.host = host
+            self.port = port
+            self.username = username
+            self.room = room
+            messagebox.showerror('Connection error', f'Host {host} is not responding on port {port}\nMake sure the information is correct and the server is properly configured')
+            self.switch_frame(LoginFrame)
 
     def switch_frame(self, frame_class):
         new_frame = frame_class(self.window, self)
@@ -57,8 +65,8 @@ class GUI():
     def isGM(self):
         return self.client.isGM
 
-    def getUserValue(self, timeout, max):
-        #TODO: do something with max
+    def getUserValue(self, timeout, maxNum):
+        #TODO: do something with maxNum
         #check frame
         thread = threading.Thread(target=self._frame.getUserValue, daemon=True)
         thread.start()
@@ -73,11 +81,10 @@ class GUI():
         self._frame.setUserList(users)
 
     def exit(self):
-        #remove client too
-        self.client.sock.close()
+        if hasattr(self, 'client'):
+            self.client.sock.close()
         self.window.destroy()
         exit()
-        pass
 
 class ApplicationFrame(Frame):
     def __init__(self, master, gui):
@@ -94,8 +101,12 @@ class ApplicationFrame(Frame):
         self.makeTextArea(self.textFrame)
 
         self.inputFrame = Frame(self)
-        self.inputFrame.place(rely=0.55, relwidth=0.5, relheight=0.35)
+        self.inputFrame.place(rely=0.55, relwidth=0.5, relheight=0.15)
         self.makeInputArea(self.inputFrame)
+
+        self.commandFrame = Frame(self)
+        self.commandFrame.place(rely=0.7, relwidth=0.5, relheigh=0.2)
+        self.makeCommandArea(self.commandFrame)
 
         self.userListFrame = Frame(self)
         self.userListFrame.place(rely=0.55, relx=0.5, relwidth=0.5, relheight=0.35)
@@ -172,9 +183,12 @@ class ApplicationFrame(Frame):
         self.valEntry.pack()
         self.valEntry.bind('<Return>', self.sendValue)
 
-        self.valLabel = Label(master, text='ABC')
+        self.valLabel = Label(master, text='placeholder')
         self.valLabel.pack()
         self.entryDone = BooleanVar(False)
+
+    def makeCommandArea(self, master):
+        pass
 
     def makeUserList(self, master):
         self.userList = Text(master)
@@ -188,48 +202,96 @@ class ApplicationFrame(Frame):
         self.exitBtn = Button(master, text='Exit/Logout', command=self.gui.exit)
         self.exitBtn.pack()
 
-
-
 class LoginFrame(Frame):
-    def __init__(self, master, gui):
-        super().__init__(master, bg='#0FACD0')
+    def __init__(self, master, gui, host=None, port=None, username=None, room=None):
+        super().__init__(master)
         self.gui = gui
 
-        self.labelHost = Label(self, text="Host", font=('Helvetica', 16))
-        self.labelPort = Label(self, text="Port")
-        self.labelUsername = Label(self, text="Username")
-        self.labelRoom = Label(self, text="Room")
+        self.labelHost = Label(self, text="Host", font=('Helvetica', 14), anchor='e')
+        self.labelPort = Label(self, text="Port", font=('Helvetica', 14), anchor='e')
+        self.labelUsername = Label(self, text="Username", font=('Helvetica', 14), anchor='e')
+        self.labelRoom = Label(self, text="Room", font=('Helvetica', 14), anchor='e')
 
-        self.entryHost = Entry(self)
-        self.entryPort = Entry(self)
-        self.entryUsername = Entry(self)
-        self.entryRoom = Entry(self)
-        self.labelHost.grid(row=0, sticky=E)
-        self.labelPort.grid(row=1, sticky=E)
-        self.labelUsername.grid(row=2, sticky=E)
-        self.labelRoom.grid(row=3, sticky=E)
+        self.entryHost = Entry(self, font=('Helvetica', 14))
+        self.entryPort = Entry(self, font=('Helvetica', 14))
+        self.entryUsername = Entry(self, font=('Helvetica', 14))
+        self.entryRoom = Entry(self, font=('Helvetica', 14))
 
-        self.entryHost.grid(row=0, column=1)
-        self.entryPort.grid(row=1, column=1)
-        self.entryUsername.grid(row=2, column=1)
-        self.entryRoom.grid(row=3, column=1)
+        self.labelHost.place(rely=0.1, relwidth=0.35, relheight=0.1)
+        self.labelPort.place(rely=0.25, relwidth=0.35, relheight=0.1)
+        self.labelUsername.place(rely=0.4, relwidth=0.35, relheight=0.1)
+        self.labelRoom.place(rely=0.55, relwidth=0.35, relheight=0.1)
 
-        self.button = Button(self, text='Go!', command=self.loginButtonClicked)
-        self.button.grid(columnspan=2)
+        self.entryHost.place(rely=0.1, relx=0.36, relwidth=0.5, relheight=0.1)
+        self.entryPort.place(rely=0.25, relx=0.36, relwidth=0.5, relheight=0.1)
+        self.entryUsername.place(rely=0.4, relx=0.36, relwidth=0.5, relheight=0.1)
+        self.entryRoom.place(rely=0.55, relx=0.36, relwidth=0.5, relheight=0.1)
 
-        #TODO: Later remove
+        self.button = Button(self, text='Login', command=self.loginButtonClicked, font=('Helvetica', 16), anchor='center')
+        self.button.place(rely=0.7, relx=0.3, relwidth=0.4, relheight=0.1)
+
+        #TODO: Later switch
+        # if self.gui.host:
+        #     self.entryHost.insert(0, self.gui.host)
+        # if self.gui.port:
+        #     self.entryPort.insert(0, self.gui.port)
+        # if self.gui.username:
+        #     self.entryUsername.insert(0, self.gui.username)
+        # if self.gui.room:
+        #     self.entryRoom.insert(0, self.gui.room)
+
         self.entryHost.insert(0, IPADDR)
         self.entryPort.insert(0, '8000')
         self.entryUsername.insert(0, str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]))
         self.entryRoom.insert(0, '22')
 
     def loginButtonClicked(self):
-        #TODO: Validate data
+        errors = ''
         host = self.entryHost.get()
+        errors += self.validateHost(host)
         port = self.entryPort.get()
+        errors += self.validatePort(port)
         username = self.entryUsername.get()
+        errors += self.validateUsername(username)
         room = self.entryRoom.get()
-        self.gui.launchClient(host,port,username,room)
+        errors += self.validateRoom(room)
+        if errors:
+            messagebox.showerror('Input validation failed', f'Your input contains the following errors:\n{errors}')
+        else:
+            self.gui.launchClient(host,port,username,room)
+
+    def validateHost(self, host):
+        msg = ''
+        #TODO: come up with hostname validation
+        return msg
+    
+    def validatePort(self, port):
+        msg = ''
+        if not port.isnumeric():
+            msg += f'Port should be a number'
+        elif int(port) not in range(0,65536):
+            msg += f'Port should be in range 0-65535'
+        return msg
+
+    def validateUsername(self, username):
+        msg = ''
+        #TODO: Move to config?
+        minChars = 1
+        maxChars = 32
+        if len(username) not in range(minChars, maxChars+1):
+            msg += f'Username must be between {minChars} and {maxChars} long\n'
+        if not username.isalnum():
+            msg += f'Username must not contain non-alphanumeric characters\n'
+        return msg
+
+    def validateRoom(self, room):
+        msg = ''
+        #TODO: Move to config?
+        minChars = 1
+        maxChars = 20
+        if len(room) not in range(minChars, maxChars+1):
+             msg += f'Room ID must be between {minChars} and {maxChars} long\n'
+        return msg
 
 if __name__ == '__main__':
     GUI()
