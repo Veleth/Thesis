@@ -160,7 +160,7 @@ class Server:
     def roll(self, message, user):
         room = user.room
         if user.is_GM:
-            if True: #TODO: if room.get_state is idle
+            if True: #TODO: if room.get_state is idle; await result
                 room.clear()
                 room.start_action()
                 room.set_state(State.ROLL)

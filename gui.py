@@ -16,7 +16,7 @@ class GUI():
         self.window = Tk()
         self.window.title('Login screen')
         self.window.resizable(False,False)
-        self.window.protocol("WM_DELETE_WINDOW", self.exit)
+        self.window.protocol('WM_DELETE_WINDOW', self.exit)
         canvas = Canvas(self.window, height=360, width=360)
         canvas.pack()
         
@@ -80,6 +80,9 @@ class GUI():
         #TODO: check if application frame
         self._frame.setUserList(users)
 
+    def startRoll(self, timeout, maxNum):
+        self.client.startRoll(timeout, maxNum)
+
     def exit(self):
         if hasattr(self, 'client'):
             self.client.sock.close()
@@ -131,6 +134,9 @@ class ApplicationFrame(Frame):
             self.valEntry.delete(0, END)
             #TODO: prompt or something
 
+    def startRoll(self, timeout, maxNum):
+        self.gui.startRoll(timeout, maxNum)
+
     def getUserValue(self):
         self.entryDone.set(False)
         self.valEntry.config(state=NORMAL)
@@ -149,7 +155,6 @@ class ApplicationFrame(Frame):
         self.userList.config(state=DISABLED)
     
     def setUserList(self, users):
-        print(users)
         self.users = users
         self.updateUserList()
 
@@ -179,6 +184,7 @@ class ApplicationFrame(Frame):
         self.chatEntry.bind('<Return>', self.sendChat)
 
     def makeInputArea(self, master):
+        #TODO: Work on placement and label
         self.valEntry = Entry(master, state=DISABLED)
         self.valEntry.pack()
         self.valEntry.bind('<Return>', self.sendValue)
@@ -188,7 +194,20 @@ class ApplicationFrame(Frame):
         self.entryDone = BooleanVar(False)
 
     def makeCommandArea(self, master):
-        pass
+        #TODO: Validate GM role
+        self.timeoutLabel = Label(master, text='Timeout', anchor='e')
+        self.timeoutSpinbox = Spinbox(master, from_ = 1, to = 300)
+
+        self.maxLabel = Label(master, text='Max', anchor='e')
+        self.maxEntry = Entry(master)
+        
+        self.rollButton = Button(master, text='Roll', command=self.startRoll)
+
+        self.timeoutLabel.place(rely=0.1, relx=0, relwidth=0.3, relheight=0.2)
+        self.timeoutSpinbox.place(rely=0.1, relx=0.5, relwidth=0.4, relheight=0.2)
+        self.maxLabel.place(rely=0.4, relx=0.2, relwidth=0.5, relheight=0.2)
+        self.maxEntry.place(rely=0.4, relx=0.2, relwidth=0.5, relheight=0.2)
+        self.rollButton.place(rely=0.7, relx=0.2, relwidth=0.7, relheight=0.2)
 
     def makeUserList(self, master):
         self.userList = Text(master)
@@ -207,10 +226,10 @@ class LoginFrame(Frame):
         super().__init__(master)
         self.gui = gui
 
-        self.labelHost = Label(self, text="Host", font=('Helvetica', 14), anchor='e')
-        self.labelPort = Label(self, text="Port", font=('Helvetica', 14), anchor='e')
-        self.labelUsername = Label(self, text="Username", font=('Helvetica', 14), anchor='e')
-        self.labelRoom = Label(self, text="Room", font=('Helvetica', 14), anchor='e')
+        self.labelHost = Label(self, text='Host', font=('Helvetica', 14), anchor='e')
+        self.labelPort = Label(self, text='Port', font=('Helvetica', 14), anchor='e')
+        self.labelUsername = Label(self, text='Username', font=('Helvetica', 14), anchor='e')
+        self.labelRoom = Label(self, text='Room', font=('Helvetica', 14), anchor='e')
 
         self.entryHost = Entry(self, font=('Helvetica', 14))
         self.entryPort = Entry(self, font=('Helvetica', 14))

@@ -68,6 +68,11 @@ class Client:
     def validated_chat(self, message):
         return message.replace(MESSAGE_END, '').replace(MESSAGE_DELIMITER, '')
 
+    def startRoll(self, timeout, maxNum):
+        #client -> server ['ROLL', '{timeout}', '{maxNum}']
+        message = compose(ROLL_HEADER, [timeout, maxNum])
+        self.sock.sendall(message)
+
     def clear(self):
         self.ownValue = None
         self.ownResult = None
@@ -96,6 +101,7 @@ class Client:
     
     """Call to roll by GM"""
     def roll(self, message):
+        #server -> client ['ROLL', '{timeout}', '{maxNum}']
         self.print(f'INFO: A roll has been called, enter your random variable') 
         timeout,  maxNum = message[1:]
         self.maxNum = int(maxNum)
@@ -103,7 +109,7 @@ class Client:
 
     """Chat messages"""
     def chat(self, message):
-        #server -> client ['CHAT', "$player", "$chat_message"]
+        #server -> client ['CHAT', '{player}', '{message}']
         self.print(f'{message[1]}: {message[2]}')
 
     """Players' results""" 

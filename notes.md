@@ -7,6 +7,7 @@ http://zetcode.com/tkinter/menustoolbars/ for menu
 - Polish: commands (!roll !)
 - Polish: login screen remember choice
 - Optional: Add contest option and contested room state if something goes wrong
+- Code polishing: unify names to use camelcase
 
 Client-side command validation
 
@@ -19,5 +20,13 @@ Message length - limitation: possibly get the client to recieve parts of the mes
 Dropout - what if first, what if middle, what if last? What if GM?
 
 ## ROADMAP:
-Tue - GM dropout, dropout, further commands, polish GM roll area on GUI, client-side dropout
+Wed - polish GM roll area on GUI, 
+Thu - GM dropout, dropout, further commands, client-side dropout
 future - user list selection?
+
+
+## Questions:
+Neceessary?: split large messages into series
+User selection (for the roll)
+Calculations
+Encoding
