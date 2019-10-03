@@ -2,15 +2,12 @@ from tkinter import *
 from tkinter import messagebox
 from client import Client
 import threading
-#TODO: remove
 from communication import *
 #temporary
 import hashlib
 import time
 import random
 # https://stackoverflow.com/questions/4770993/how-can-i-make-silent-exceptions-louder-in-tkinter
-# https://medium.com/swlh/lets-write-a-chat-app-in-python-f6783a9ac170
-# http://effbot.org/tkinterbook/button.htm
 class GUI():
     def __init__(self):
         self.window = Tk()
@@ -21,14 +18,14 @@ class GUI():
         canvas.pack()
         
         self._frame = None
-        self.switch_frame(LoginFrame)
+        self.switchFrame(LoginFrame)
         self.launchClient(host=IPADDR, port=8000, username=str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]) , room='22')#TODO: Remove
         self.window.mainloop()
 
     def launchClient(self, host, port, username, room):
         try:
             self.client = Client(host, int(port), username, room, gui=self)
-            self.switch_frame(ApplicationFrame)
+            self.switchFrame(ApplicationFrame)
             self.window.geometry('480x720')
         except:
             self.host = host
@@ -36,9 +33,9 @@ class GUI():
             self.username = username
             self.room = room
             messagebox.showerror('Connection error', f'Host {host} is not responding on port {port}\nMake sure the information is correct and the server is properly configured')
-            self.switch_frame(LoginFrame)
+            self.switchFrame(LoginFrame)
 
-    def switch_frame(self, frame_class):
+    def switchFrame(self, frame_class):
         new_frame = frame_class(self.window, self)
         if self._frame is not None:
             self._frame.destroy()
@@ -76,6 +73,10 @@ class GUI():
         else:
             self._frame.sendValue(self.client.getRandomValue())
 
+    def prepareCommandFrame(self):
+        #TODO: check if application frame
+        self._frame.prepareCommandFrame() 
+
     def setUserList(self, users):
         #TODO: check if application frame
         self._frame.setUserList(users)
@@ -107,10 +108,6 @@ class ApplicationFrame(Frame):
         self.inputFrame.place(rely=0.55, relwidth=0.5, relheight=0.15)
         self.makeInputArea(self.inputFrame)
 
-        self.commandFrame = Frame(self)
-        self.commandFrame.place(rely=0.7, relwidth=0.5, relheigh=0.2)
-        self.makeCommandArea(self.commandFrame)
-
         self.userListFrame = Frame(self)
         self.userListFrame.place(rely=0.55, relx=0.5, relwidth=0.5, relheight=0.35)
         self.makeUserList(self.userListFrame)
@@ -134,7 +131,15 @@ class ApplicationFrame(Frame):
             self.valEntry.delete(0, END)
             #TODO: prompt or something
 
-    def startRoll(self, timeout, maxNum):
+    def prepareCommandFrame(self):
+        self.commandFrame = Frame(self)
+        self.commandFrame.place(rely=0.7, relwidth=0.5, relheigh=0.2)
+        self.makeCommandArea(self.commandFrame)
+
+    def startRoll(self):
+        #TODO: Data validation and prompt
+        timeout = self.timeoutSpinbox.get()
+        maxNum = self.maxNumSpinbox.get()
         self.gui.startRoll(timeout, maxNum)
 
     def getUserValue(self):
@@ -198,22 +203,24 @@ class ApplicationFrame(Frame):
         self.timeoutLabel = Label(master, text='Timeout', anchor='e')
         self.timeoutSpinbox = Spinbox(master, from_ = 1, to = 300)
 
-        self.maxLabel = Label(master, text='Max', anchor='e')
-        self.maxEntry = Entry(master)
+        self.maxNumLabel = Label(master, text='Max', anchor='e')
+        self.maxNumSpinbox = Spinbox(master, from_ = 2, to=10000)
         
         self.rollButton = Button(master, text='Roll', command=self.startRoll)
 
-        self.timeoutLabel.place(rely=0.1, relx=0, relwidth=0.3, relheight=0.2)
-        self.timeoutSpinbox.place(rely=0.1, relx=0.5, relwidth=0.4, relheight=0.2)
-        self.maxLabel.place(rely=0.4, relx=0.2, relwidth=0.5, relheight=0.2)
-        self.maxEntry.place(rely=0.4, relx=0.2, relwidth=0.5, relheight=0.2)
-        self.rollButton.place(rely=0.7, relx=0.2, relwidth=0.7, relheight=0.2)
+        self.timeoutLabel.place(rely=0.1, relx=0.1, relwidth=0.3, relheight=0.2)
+        self.timeoutSpinbox.place(rely=0.1, relx=0.5, relwidth=0.3, relheight=0.2)
+        self.maxNumLabel.place(rely=0.4, relx=0.1, relwidth=0.3, relheight=0.2)
+        self.maxNumSpinbox.place(rely=0.4, relx=0.5, relwidth=0.3, relheight=0.2)
+        self.rollButton.place(rely=0.7, relx=0.2, relwidth=0.6, relheight=0.2)
 
     def makeUserList(self, master):
         self.userList = Text(master)
         self.userListScrollbar = Scrollbar(master)
+
         self.userList.place(relwidth=0.95, relheight=1)
         self.userListScrollbar.place(relx=0.95, relwidth=0.05, relheight=1)
+        
         self.userList.config(yscrollcommand=self.userListScrollbar.set, state=DISABLED)
         self.userListScrollbar.config(command=self.userList.yview)
 

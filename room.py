@@ -27,8 +27,11 @@ class Room:
     def get_players(self):
         return self.players
 
-    def start_action(self):
-        self.participants = self.players.copy()
+    def start_action(self, participants=None):
+        if participants is None:
+            self.participants = self.players.copy()
+        else:
+            self.participants = participants.copy()
 
     def get_participants(self):
         return self.participants

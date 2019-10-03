@@ -2,12 +2,11 @@
 https://www.youtube.com/watch?v=D8-snVfekto for layout
 http://zetcode.com/tkinter/menustoolbars/ for menu
 
-- Server command to get logs and check (add server room to logs)
-- Optional: Dummies and unit testing
-- Polish: commands (!roll !)
+- Polish: roll with user subset
 - Polish: login screen remember choice
 - Optional: Add contest option and contested room state if something goes wrong
-- Code polishing: unify names to use camelcase
+- Code polishing: unify names to use camelcase in gui/client/server/room/user
+- 
 
 Client-side command validation
 
@@ -19,14 +18,13 @@ IMPERATIVE: split large messages into series
 Message length - limitation: possibly get the client to recieve parts of the message separately?
 Dropout - what if first, what if middle, what if last? What if GM?
 
-## ROADMAP:
-Wed - polish GM roll area on GUI, 
-Thu - GM dropout, dropout, further commands, client-side dropout
+## ROADMAP 
+Thu - GM dropout, dropout
 future - user list selection?
-
 
 ## Questions:
 Neceessary?: split large messages into series
 User selection (for the roll)
 Calculations
 Encoding
+Reconnects?

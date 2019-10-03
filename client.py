@@ -10,7 +10,7 @@ class Client:
         self.sock.connect((HOST, PORT))
         self.room = room
         self.username = username
-        self.maxNum = 0 # Current max roll
+        self.maxNum = 0 # Current max roll TODO: Possibly remove
         self.isGM = False
         self.ownValue = None
         self.ownResult = None
@@ -51,12 +51,19 @@ class Client:
                 exit(2)
 
     def recv(self): #TODO: change to non-blocking
-        while True:
-            data = self.sock.recv(2048) #TODO: change if 
-            if not data:
-                break
-            self.handle(data)
-        print("An error has occured")
+        try:
+            while True:
+                data = self.sock.recv(2048) #TODO: change if 
+                if not data:
+                    break
+                self.handle(data)
+        except ConnectionResetError:
+            print('server dropped out')
+            #TODO:exit frame in gui and drop an error message
+        except ConnectionAbortedError:
+            print('you have severed the connection')
+        finally:    
+            print('The session has been closed') #TODO: gui action
 
     def validated_input(self, message):
         ans = input(message)
@@ -67,11 +74,6 @@ class Client:
 
     def validated_chat(self, message):
         return message.replace(MESSAGE_END, '').replace(MESSAGE_DELIMITER, '')
-
-    def startRoll(self, timeout, maxNum):
-        #client -> server ['ROLL', '{timeout}', '{maxNum}']
-        message = compose(ROLL_HEADER, [timeout, maxNum])
-        self.sock.sendall(message)
 
     def clear(self):
         self.ownValue = None
@@ -97,6 +99,8 @@ class Client:
         self.room = message[1]
         self.username = message[2]
         self.isGM = bool(int(message[3]))
+        if self.isGM:
+            self.gui.prepareCommandFrame()
         self.gui.refreshHeader()
     
     """Call to roll by GM"""
@@ -197,6 +201,11 @@ class Client:
         if self.ownValue:
             return hashlib.sha256(f'{time.time()}{self.rng.random()}{self.ownValue}'.encode()).hexdigest() 
         return hashlib.sha256(f'{self.rng.random()}{time.time()}{self.rng.random()}'.encode()).hexdigest()
+
+    def startRoll(self, timeout, maxNum):
+        #client -> server ['ROLL', '{timeout}', '{maxNum}']
+        message = compose(ROLL_HEADER, [timeout, maxNum])
+        self.sock.sendall(message)
 
 #TODO: Remove later
 if __name__=='__main__':

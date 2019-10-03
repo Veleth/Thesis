@@ -30,7 +30,7 @@ class Server:
             if action == '1':
                 message = 'CHAT|Player1|Generic message\\'
             elif action == '2':
-                message = 'ROLL|5|6\\' #TODO: Ideas for improvement: add involved players and die size
+                message = 'ROLL|5|6\\' #TODO: Ideas for improvement: add involved players
             elif action == '3':
                 message = 'VAL|a8993|abc339\\'
             elif action == '4':
@@ -129,7 +129,7 @@ class Server:
                     if not user.room.get_players():
                         del self.rooms[user.room.get_number()] #VOLATILE #or self.rooms.pop(user.room)
                     else:
-                        self.sendRoom(room, compose(DROPPED_USER_HEADER, [name]))
+                        self.sendRoom(room, compose(DROPPED_USER_HEADER, [name, ]))
                         self.sendRoom(room, compose(USER_LIST_HEADER, self.listPlayers(room)))
 
     def init(self, message, newUser):
@@ -160,13 +160,14 @@ class Server:
     def roll(self, message, user):
         room = user.room
         if user.is_GM:
-            if True: #TODO: if room.get_state is idle; await result
+            if True: #TODO: if room.get_state is idle; await result; array of participants
                 room.clear()
                 room.start_action()
                 room.set_state(State.ROLL)
                 timeout = int(message[1])
                 maxNum = int(message[2])
                 msg = compose(ROLL_HEADER, [timeout, maxNum])
+                self.sendRoom(room, msg)
             else:
                 print(f'ERROR [ROLL]: {message} recieved during state {room.get_state()} in room {room}')
 
