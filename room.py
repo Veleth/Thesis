@@ -31,7 +31,7 @@ class Room:
         if participants is None:
             self.participants = self.players.copy()
         else:
-            self.participants = participants.copy()
+            self.participants = participants
 
     def get_participants(self):
         return self.participants

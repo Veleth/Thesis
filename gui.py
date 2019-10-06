@@ -47,7 +47,9 @@ class GUI():
         self._frame.print(message)
 
     def sendChat(self, message):
-        self.client.sendChat(message)
+        #TODO config:
+        maxLength = 140
+        self.client.sendChat(message[:maxLength])
     
     def sendValue(self, value):
         return self.client.sendValue(value)
@@ -89,10 +91,25 @@ class GUI():
             self.client.sock.close()
         self.window.destroy()
         exit()
+    
+    def logout(self):
+        if hasattr(self, 'client'):
+            self.client.sock.close()
+        self.window.geometry('360x360')
+        self.switchFrame(LoginFrame)
+
+    def showerror(self, title, message):
+        messagebox.showerror(title, message)
+
+    def showwarning(self, title, message):
+        messagebox.showwarning(title, message)
+
+    def showinfo(self, title, message):
+        messagebox.showinfo(title, message)
 
 class ApplicationFrame(Frame):
     def __init__(self, master, gui):
-        super().__init__(master, bg='#ABABAB')
+        super().__init__(master)
         self.gui = gui
         self.users = []
 
@@ -123,13 +140,45 @@ class ApplicationFrame(Frame):
             self.chatEntry.delete(0, END)
     
     def sendValue(self, override=None):
+        if self.entryDone.get():
+            return
         self.entryDone.set(True)
         self.valEntry.config(state=DISABLED)
+        #Overriding value present when the user does not input any value
         value = override or self.valEntry.get().replace(MESSAGE_DELIMITER,'').replace(MESSAGE_END, '')
         if value:
             randomness = self.gui.sendValue(value)
-            self.valEntry.delete(0, END)
-            #TODO: prompt or something
+            if not override:
+                self.valEntry.config(state=NORMAL)
+                self.valEntry.delete(0, END)
+                self.valEntry.config(state=DISABLED)
+                self.valLabel.config(text='Your value has been submitted!')
+            else:
+                self.valLabel.config(text='A random value has been submitted!')
+
+            self.rollDetails = {
+                'value' : value,
+                'override' : True if override else False,
+                'randomness' : randomness
+            }
+            self.valButton.config(state=NORMAL)
+            print(self.rollDetails)
+
+    def seeRollInfo(self):
+        info = ''
+        details = self.rollDetails
+        if details:
+            if details['override']:
+                info += f'You failed to enter a value, so\n{details["value"]}\nwas chosen using system randomness.\n'
+            else:
+                info += f'Your input: {details["value"]}\n'
+            info += f'It was used to calculate and submit your randomness, which is:\n{details["randomness"]}\n'
+        if info:
+            messagebox.showinfo('Roll summary', f'{info}')
+
+
+    def seeTrace(self):
+        pass #TODO: Fill
 
     def prepareCommandFrame(self):
         self.commandFrame = Frame(self)
@@ -189,14 +238,20 @@ class ApplicationFrame(Frame):
         self.chatEntry.bind('<Return>', self.sendChat)
 
     def makeInputArea(self, master):
-        #TODO: Work on placement and label
         self.valEntry = Entry(master, state=DISABLED)
-        self.valEntry.pack()
-        self.valEntry.bind('<Return>', self.sendValue)
+        self.valEntry.bind('<Return>', lambda event: self.sendValue())
 
-        self.valLabel = Label(master, text='placeholder')
-        self.valLabel.pack()
+        self.valLabel = Label(master)
+
         self.entryDone = BooleanVar(False)
+
+        self.valButton = Button(master, text='Roll info', command=self.seeRollInfo, state=DISABLED)
+        self.traceButton = Button(master, text='Trace', command=self.seeTrace, state=DISABLED)
+
+        self.valEntry.place(relx=0.15, relwidth=0.7, rely = 0.1, relheight=0.2)
+        self.valLabel.place(relx=0.05, relwidth=0.9, rely = 0.4, relheight=0.2)
+        self.valButton.place(relx=0.15, relwidth=0.3, rely = 0.7, relheight=0.2)
+        self.traceButton.place(relx=0.55, relwidth=0.3, rely = 0.7, relheight=0.2)
 
     def makeCommandArea(self, master):
         #TODO: Validate GM role
@@ -225,7 +280,7 @@ class ApplicationFrame(Frame):
         self.userListScrollbar.config(command=self.userList.yview)
 
     def makeExitArea(self, master):
-        self.exitBtn = Button(master, text='Exit/Logout', command=self.gui.exit)
+        self.exitBtn = Button(master, text='Logout', command=self.gui.logout)
         self.exitBtn.pack()
 
 class LoginFrame(Frame):
@@ -255,7 +310,7 @@ class LoginFrame(Frame):
 
         self.button = Button(self, text='Login', command=self.loginButtonClicked, font=('Helvetica', 16), anchor='center')
         self.button.place(rely=0.7, relx=0.3, relwidth=0.4, relheight=0.1)
-
+        
         #TODO: Later switch
         # if self.gui.host:
         #     self.entryHost.insert(0, self.gui.host)
@@ -321,3 +376,4 @@ class LoginFrame(Frame):
 
 if __name__ == '__main__':
     GUI()
+

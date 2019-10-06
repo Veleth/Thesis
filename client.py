@@ -58,12 +58,12 @@ class Client:
                     break
                 self.handle(data)
         except ConnectionResetError:
-            print('server dropped out')
-            #TODO:exit frame in gui and drop an error message
+            self.gui.logout()
+            self.gui.showerror('Connection lost', 'You have lost connection to the server.\nIt might have shut down.')
         except ConnectionAbortedError:
-            print('you have severed the connection')
+            self.gui.showinfo('Logout', 'You have successfully logged out!')
         finally:    
-            print('The session has been closed') #TODO: gui action
+            pass #TODO: something?
 
     def validated_input(self, message):
         ans = input(message)
@@ -162,7 +162,11 @@ class Client:
 
     def droppedUser(self, message):
         username = message[1]
-        self.print(f'INFO: {username} has left the room')
+        if int(message[2]):
+            self.print(f'INFO: {username} (GM) has left the room.\nYou can keep chatting with others, but no further rolls will be made.')
+        else:
+            self.print(f'INFO: {username} has left the room.')
+        
 
     """
     Client-GUI functionality that is called by the above functions.
@@ -187,7 +191,6 @@ class Client:
     """
 
     def sendChat(self, message):
-        print(f'Chatsend message {message}')
         message = compose(CHAT_HEADER, [self.username, message])
         self.sock.sendall(message)
 
@@ -196,6 +199,8 @@ class Client:
         message = compose(VAL_HEADER, [self.ownValue])
         self.print(f'DEBUG: value sent - {self.ownValue}')
         self.sock.sendall(message)
+        self.sock.sendall(message)
+        return self.ownValue
 
     def getRandomValue(self):
         if self.ownValue:

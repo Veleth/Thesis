@@ -7,13 +7,6 @@ If the protocol changes, only this file needs to be altered.
 MESSAGE_END = '\\'
 MESSAGE_DELIMITER = '|'
 
-ROLL_COMMAND = '!roll'      # Call to roll (GM only), for example `roll d6 username username username`
-TRACE_COMMAND = '!trace'    # See the calculation trace (user) and compare with others
-LIST_COMMAND = '!list'      # List the room members
-HELP_COMMAND = '!help'      # See available commands
-
-COMMANDS = [ROLL_COMMAND, TRACE_COMMAND, HELP_COMMAND]
-
 INIT_HEADER = 'INIT'    # For server: Initialization request, for client: confirmation and response
                         # client -> server ['INIT', '{room_number}', '{name}']
                         # server -> client ['INIT', '{room_number}', '{name}', '{isGM}']
