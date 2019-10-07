@@ -1,0 +1,13 @@
+user name change notification
+server DDOS protection (message buffer and outgoing message queue with delay) - queue per room
+chat message(s) concatenation
+
+contested state - out of scope. possibly halt the next roll / feature to get other users to save/submit their traces
+
+calculation: pseudorandom number generation w/ seed ; separate module ; API
+
+join newly/randomly created room (Login checkbox - create a new room)
+
+potentially - only 'logout' permanently drops connection
+
+DF key negotiation & symmetric encryption / Future: ring usage - In thesis: All messages go through the server, all protests might be ignored. Worth distributing the application completely to P2P
