@@ -98,6 +98,7 @@ class Client:
     def init(self, message):
         self.room = message[1]
         self.username = message[2]
+        self.gui.checkNameChange(message[2])
         self.isGM = bool(int(message[3]))
         if self.isGM:
             self.gui.prepareCommandFrame()

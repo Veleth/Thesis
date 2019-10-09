@@ -26,12 +26,7 @@ To decide - user list selection, splitting
 
 
 ## Questions:
-Neceessary?: split large messages into series
-User selection (for the roll) (list? etc)
-Calculation algorithm
-Encoding / encrypting
-Reconnects?
-What if wrong result/input not included? (anything more than a message?)
+Config file? or arbitrary (strings?)
 
 ### Cons notes:
 user name change notification

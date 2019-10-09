@@ -98,6 +98,11 @@ class GUI():
         self.window.geometry('360x360')
         self.switchFrame(LoginFrame)
 
+    def checkNameChange(self, name):
+        if hasattr(self, 'enteredUsername'):
+            if self.enteredUsername != name:
+                self.showwarning('Name not available', f'The requested name {self.enteredUsername} was not available.\n {name} is your username instead.')
+
     def showerror(self, title, message):
         messagebox.showerror(title, message)
 
@@ -357,6 +362,7 @@ class LoginFrame(Frame):
     def validateUsername(self, username):
         msg = ''
         #TODO: Move to config?
+        self.gui.enteredUsername = username
         minChars = 1
         maxChars = 32
         if len(username) not in range(minChars, maxChars+1):
