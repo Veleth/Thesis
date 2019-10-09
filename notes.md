@@ -14,13 +14,13 @@ http://zetcode.com/tkinter/menustoolbars/ for menu
 - IMPERATIVE: split large messages into series (values, traces)
 - Message length - limitation: possibly get the client to recieve parts of the message separately? (Or limit users per room, then add kicking)
 
-## ROADMAP 
-Sun - roll with user subset (Server), user roll and command area improvement (client), client logout and connection drop, GM leave info for players
+## ROADMAP
 
-Ahead:
-Mon - TO CONFIRM: trace gathering (server/client), trace displaying, trace order, contested state & popup; server-side timeout and override
-Tue - 
-Wed - 
+Wed - 1-3 from the list, exit button fix; server-side incoming message buffer;
+5-6 from the list;
+Thu - trace gathering (server/client), trace displaying, trace order, ; server-side timeout and override; partially 4 from the list
+Fri - trace save popup and signal; delay next roll; roll decline send back (message); append file
+
 Future - Remove debug messages, artificial requests/messages, complete TODOs, move functionality appropriately
 To decide - user list selection, splitting
 
@@ -29,16 +29,18 @@ To decide - user list selection, splitting
 Config file? or arbitrary (strings?)
 
 ### Cons notes:
-user name change notification
-server DDOS protection (message buffer and outgoing message queue with delay) - queue per room
-chat message(s) concatenation
+[x] user name change notification
+[x] server DDOS protection (message buffer and outgoing message queue with delay) - 
+queue per room
+[x] chat message(s) concatenation
+NOTE: The server can handle information at speeds that make sockets stop sending coherent messages; It is far greater than what a client can handle
 
-contested state - out of scope. possibly halt the next roll / feature to get other users to save/submit their traces
+[ ] contested state - out of scope. possibly halt the next roll / feature to get other users to save/submit their traces
 
-calculation: pseudorandom number generation w/ seed ; separate module ; API
+[x] calculation: pseudorandom number generation w/ seed ; separate module ; API
 
-join newly/randomly created room (Login checkbox - create a new room)
+[x] join newly/randomly created room (Login checkbox - create a new room)
 
-potentially - only 'logout' permanently drops connection
+[ ] potentially - only 'logout' permanently drops connection
 
-DF key negotiation & symmetric encryption / Future: ring usage - In thesis: All messages go through the server, all protests might be ignored. Worth distributing the application completely to P2P
+[ ] DF key negotiation & symmetric encryption / Future: ring usage - In thesis: All messages go through the server, all protests might be ignored. Worth distributing the application completely to P2P

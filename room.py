@@ -1,4 +1,5 @@
 from enum import Enum
+from queue import Queue
 class Room:
     def __init__(self, number):
         self.number = number
@@ -9,6 +10,7 @@ class Room:
         self.traces = {}
         self.missing = 0
         self.state = State.IDLE
+        self.messageQueue = Queue()
 
     def add_player(self, player):
         self.players.append(player)

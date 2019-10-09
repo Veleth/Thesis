@@ -19,7 +19,7 @@ class GUI():
         
         self._frame = None
         self.switchFrame(LoginFrame)
-        self.launchClient(host=IPADDR, port=8000, username=str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]) , room='22')#TODO: Remove
+        # self.launchClient(host=IPADDR, port=8000, username=str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]) , room='22')#TODO: Remove
         self.window.mainloop()
 
     def launchClient(self, host, port, username, room):
@@ -313,8 +313,12 @@ class LoginFrame(Frame):
         self.entryUsername.place(rely=0.4, relx=0.36, relwidth=0.5, relheight=0.1)
         self.entryRoom.place(rely=0.55, relx=0.36, relwidth=0.5, relheight=0.1)
 
+        self.assignRoom = BooleanVar(False)
+        self.checkbutton = Checkbutton(self, text="Expand", command=self.toggleRoomEntry, var=self.assignRoom)
+        self.checkbutton.place(rely=0.65, relx=0.3, relwidth=0.4, relheight=0.1)
+
         self.button = Button(self, text='Login', command=self.loginButtonClicked, font=('Helvetica', 16), anchor='center')
-        self.button.place(rely=0.7, relx=0.3, relwidth=0.4, relheight=0.1)
+        self.button.place(rely=0.75, relx=0.3, relwidth=0.4, relheight=0.1)
         
         #TODO: Later switch
         # if self.gui.host:
@@ -339,12 +343,21 @@ class LoginFrame(Frame):
         errors += self.validatePort(port)
         username = self.entryUsername.get()
         errors += self.validateUsername(username)
-        room = self.entryRoom.get()
-        errors += self.validateRoom(room)
+        if self.assignRoom.get():
+            room = None
+        else:
+            room = self.entryRoom.get()
+            errors += self.validateRoom(room)
         if errors:
             messagebox.showerror('Input validation failed', f'Your input contains the following errors:\n{errors}')
         else:
             self.gui.launchClient(host,port,username,room)
+
+    def toggleRoomEntry(self):
+        if self.assignRoom.get():
+            self.entryRoom.config(state=DISABLED)
+        else:
+            self.entryRoom.config(state=NORMAL)
 
     def validateHost(self, host):
         msg = ''

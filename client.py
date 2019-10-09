@@ -1,5 +1,6 @@
 import socket, time, threading, hashlib, sys, random
 from communication import *
+from calculator import method1 as calculate
 from collections import Counter
 
 class Client:
@@ -31,10 +32,11 @@ class Client:
         }
         initializer = threading.Thread(target=self.initialize, daemon=True)
         initializer.start()
-        threading.Thread(target=self.recv, daemon=False).start()
+        threading.Thread(target=self.recv, daemon=True).start()
+        #TODO: daemon false if problems with recv
 
     def initialize(self):
-        message = compose(INIT_HEADER, [self.room, self.username])
+        message = compose(INIT_HEADER, filter(None, [self.room, self.username]))
         self.sock.sendall(message)
 
     def handle(self, data):
@@ -53,7 +55,7 @@ class Client:
     def recv(self): #TODO: change to non-blocking
         try:
             while True:
-                data = self.sock.recv(2048) #TODO: change if 
+                data = self.sock.recv(2048)
                 if not data:
                     break
                 self.handle(data)
@@ -81,12 +83,6 @@ class Client:
         self.ownTrace = None
         self.traces = []
 
-    def calculate(self, values, maxNum): #TODO: improve and refine
-        s = sum([int(v, 16) for v in values])
-        self.ownResult = s%maxNum or maxNum #if 0 then maxNum
-        print(f'Result: {self.ownResult}')
-        #TODO: Clarify in the string
-        self.ownTrace = f'The values: {values}\n, the sum: {s}, mod {maxNum} equals to {self.ownResult}'
 
     """
     The following functions are responses to certain message headers and will be invoked
@@ -114,8 +110,14 @@ class Client:
 
     """Chat messages"""
     def chat(self, message):
-        #server -> client ['CHAT', '{player}', '{message}']
-        self.print(f'{message[1]}: {message[2]}')
+        #server -> client ['CHAT', '{player}', '{chat_message}']
+        #server -> client ['CHAT', '{player}', '{chat_message}', '{player}', '{chat_message}', ...]
+        if len(message) > 3:
+            #Create an array of tuples (player_name, chat_message)
+            for player_name,chat_message in zip(message[1::2], message[2::2]):
+                self.print(f'{player_name}: {chat_message}')
+        else:
+            self.print(f'{message[1]}: {message[2]}')
 
     """Players' results""" 
     def result(self, message):
@@ -134,11 +136,13 @@ class Client:
     """Players' values"""
     def val(self, message):
         values = message[1:]
-        if True: #TODO value in values:
-            self.calculate(values, self.maxNum)
+        if self.ownValue in values:
+            self.ownResult, self.ownTrace = calculate(values, self.maxNum)
+            self.print(f'Your calculation: {self.ownResult}')
             message = compose(RESULT_HEADER, [self.ownResult])
             self.sock.sendall(message)
         else:
+            #TODO: throw prompt
             self.print(f'ERROR: Your value {self.ownValue} not present in {message}')
 
     """Players' traces"""    
@@ -192,14 +196,19 @@ class Client:
     """
 
     def sendChat(self, message):
-        message = compose(CHAT_HEADER, [self.username, message])
-        self.sock.sendall(message)
+        #TODO: remove DDOS test
+        # for i in range(1,1000):
+        #     msg = compose(CHAT_HEADER, [self.username, f'{message}{i}'])
+        #     self.sock.sendall(msg)
+        #     time.sleep(0.01)
+        msg = compose(CHAT_HEADER, [self.username, message])
+        self.sock.sendall(msg)
 
     def sendValue(self, seed):
         self.ownValue = hashlib.sha256(f'{time.time()}{self.rng.random()}{seed}'.encode()).hexdigest()
+        print('mood')
         message = compose(VAL_HEADER, [self.ownValue])
         self.print(f'DEBUG: value sent - {self.ownValue}')
-        self.sock.sendall(message)
         self.sock.sendall(message)
         return self.ownValue
 

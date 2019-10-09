@@ -1,6 +1,7 @@
 import socket, threading, time, datetime, sys, hashlib, random, re
 from user import User
 from room import Room, State
+from queue import Empty
 from communication import *
 
 class Server:
@@ -28,7 +29,7 @@ class Server:
         while True:
             action = input()
             if action == '1':
-                message = 'CHAT|Player1|Generic message\\'
+                message = 'CHAT|Player1|Generic message|Player2|Ans\\'
             elif action == '2':
                 message = 'ROLL|5|6\\' #TODO: Ideas for improvement: add involved players
             elif action == '3':
@@ -90,6 +91,25 @@ class Server:
         for message in messages:
             self.sendMessage(player, message)
 
+    def chatBuffer(self, room):
+        messages = []
+        while True:
+            if messages:
+                message = compose(CHAT_HEADER, messages)
+                self.sendRoom(room, message)
+                messages = []
+            totalLength = sum([len(x) for x in messages])
+            #TODO:config
+            try:
+                while totalLength < 800 and len(messages) < 10:
+                    messages += room.messageQueue.get_nowait()
+            except Empty:
+                continue
+            except:
+                print(f'An unknown exception occured in chat buffer for room {room.room_number}. Perhaps you should restart the server')
+            finally:
+                time.sleep(0.4)
+
     def listPlayers(self, room):
         lst = []
         for player in room.get_players():
@@ -145,8 +165,13 @@ class Server:
 
     def init(self, message, newUser):
         #INIT MESSAGE STRUCTURE ['INIT', '{room_number}', '{name}']
-        room_number = message[1]
-        username = message[2]
+        #(For room assignment)  ['INIT', '', '{name}']
+        if len(message) < 3:
+            room_number = self.findRoomNumber()
+            username  = message[1]
+        else:
+            room_number = message[1]
+            username = message[2]
         if room_number in self.rooms:
             room = self.rooms[room_number]
             newUser.room = room
@@ -160,6 +185,7 @@ class Server:
         else:
             room = Room(room_number)
             self.rooms[room_number] = room
+            threading.Thread(target=self.chatBuffer, args=(room,), daemon=True).start()
             newUser.room = room
             newUser.name = username
             newUser.is_GM = True
@@ -248,10 +274,15 @@ class Server:
         names = [player.name for player in players]
         pattern = re.compile(r'^{0}(_\d+)?$'.format(username))
         return sum([1 if pattern.match(name) else 0 for name in names])
+    
+    def findRoomNumber(self):
+        i = 1
+        while str(i) in self.rooms.keys():
+            i += 1
+        return f'{i}'
 
     def chat(self, message, user):
         room = user.room
-        message = compose(CHAT_HEADER, message[1:])
-        self.sendRoom(room, message)
+        room.messageQueue.put(message[1:])
 
 server = Server(IPADDR, 8000)
