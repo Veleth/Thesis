@@ -1,4 +1,4 @@
-import socket, time, threading, hashlib, sys, random
+import socket, time, threading, hashlib, sys, random, datetime
 from communication import *
 from calculator import method1 as calculate
 from collections import Counter
@@ -16,6 +16,7 @@ class Client:
         self.ownValue = None
         self.ownResult = None
         self.ownTrace = None
+        self.rollTime = None
         self.rng = random.SystemRandom()
         self.traces = []
         self.dispatch = {
@@ -28,7 +29,8 @@ class Client:
             INFO_HEADER : self.info,
             NEW_USER_HEADER : self.newUser,
             DROPPED_USER_HEADER : self.droppedUser,
-            USER_LIST_HEADER : self.userList
+            USER_LIST_HEADER : self.userList,
+            ERROR_HEADER: self.error
         }
         initializer = threading.Thread(target=self.initialize, daemon=True)
         initializer.start()
@@ -104,6 +106,7 @@ class Client:
     def roll(self, message):
         #server -> client ['ROLL', '{timeout}', '{maxNum}']
         self.print(f'INFO: A roll has been called, enter your random variable') 
+        self.rollTime = datetime.datetime.now()
         timeout,  maxNum = message[1:]
         self.maxNum = int(maxNum)
         self.getInput(int(timeout), int(maxNum))
@@ -128,7 +131,6 @@ class Client:
                 self.print(f'The result is {self.ownResult}')
             else:
                 self.print(f'Something went wrong and not everyone has the same result. They are as follows (result: number of occurences): {dict(Counter(results))}')
-                #str(dict).replace(', ','\r\n').replace("u'","").replace("'","")[1:-1] or https://stackoverflow.com/questions/17330139/python-printing-a-dictionary-as-a-horizontal-table-with-headers
         else:
             self.print(f'Your result {self.ownResult} is not present in results from server: {results}')
         pass
@@ -142,19 +144,29 @@ class Client:
             message = compose(RESULT_HEADER, [self.ownResult])
             self.sock.sendall(message)
         else:
-            #TODO: throw prompt
-            self.print(f'ERROR: Your value {self.ownValue} not present in {message}')
+            self.showwarning('Value not present', f'Your value {self.ownValue} not present in {message}. The server has been notified.')
+            msg = compose(ERROR_HEADER, [VALUE_OMITTED_ERROR, self.ownValue])
+            self.sock.sendall(msg)
 
     """Players' traces"""    
     def trace(self, message):
         for trace in message[1:]:
             self.traces += trace 
-        pass
+        pass #TODO: decide
 
     def userList(self, message):
         users = message[1:]
         self.gui.setUserList(users)
 
+    def error(self, message):
+        if message[1] in [VALUE_OMITTED_ERROR, RESULT_DIFFERS_ERROR]:
+            title = 'Calculation problem'
+            contents = f'One of the users has experienced a problem.\nDo you want to save your trace?'
+            if self.askquestion(title, contents) == 'yes':
+                with open('trace.txt', 'a') as f:
+                    f.write(f'---------------\nRoll start: {self.rollTime}\nYour value: {self.ownValue}\n{self.ownTrace}\n')
+                self.showinfo('Success', 'Trace successfully saved!')
+        pass #TODO: fix, refine, complete, split
 
     """Info from server, handle basically like chat"""
     def info(self, message):
@@ -190,6 +202,18 @@ class Client:
             self.gui.getUserValue(timeout, maxNum)
         else:
             pass 
+
+    def askquestion(self, title, message):
+        return self.gui.askquestion(title, message)
+
+    def showerror(self, title, message):
+        self.gui.showerror(title, message)
+
+    def showwarning(self, title, message):
+        self.gui.showwarning(title, message)
+
+    def showinfo(self, title, message):
+        self.gui.showinfo(title, message)
 
     """
     Client functionality called by the GUI

@@ -107,3 +107,4 @@ venv.bak/
 *.DS_Store
 *.pyc
 __pycache__
+trace.txt

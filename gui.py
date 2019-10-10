@@ -64,6 +64,11 @@ class GUI():
     def isGM(self):
         return self.client.isGM
 
+    def getTrace(self):
+        if self.client.ownResult:
+            return f'Roll start: {self.client.rollTime}\nYour value: {self.client.ownValue}\n{self.client.ownTrace}'
+        else:
+            return f'No calculations have taken place yet.\nWait for others to submit their values.'
     def getUserValue(self, timeout, maxNum):
         #TODO: do something with maxNum
         #check frame
@@ -102,6 +107,9 @@ class GUI():
         if hasattr(self, 'enteredUsername'):
             if self.enteredUsername != name:
                 self.showwarning('Name not available', f'The requested name {self.enteredUsername} was not available.\n {name} is your username instead.')
+
+    def askquestion(self, title, message):
+        return messagebox.askquestion(title, message)
 
     def showerror(self, title, message):
         messagebox.showerror(title, message)
@@ -167,7 +175,7 @@ class ApplicationFrame(Frame):
                 'randomness' : randomness
             }
             self.valButton.config(state=NORMAL)
-            print(self.rollDetails)
+            self.traceButton.config(state=NORMAL)
 
     def seeRollInfo(self):
         info = ''
@@ -181,9 +189,9 @@ class ApplicationFrame(Frame):
         if info:
             messagebox.showinfo('Roll summary', f'{info}')
 
-
     def seeTrace(self):
-        pass #TODO: Fill
+        trace = self.gui.getTrace()
+        messagebox.showinfo('Your trace', trace)
 
     def prepareCommandFrame(self):
         self.commandFrame = Frame(self)
@@ -259,7 +267,6 @@ class ApplicationFrame(Frame):
         self.traceButton.place(relx=0.55, relwidth=0.3, rely = 0.7, relheight=0.2)
 
     def makeCommandArea(self, master):
-        #TODO: Validate GM role
         self.timeoutLabel = Label(master, text='Timeout', anchor='e')
         self.timeoutSpinbox = Spinbox(master, from_ = 1, to = 300)
 
@@ -314,8 +321,8 @@ class LoginFrame(Frame):
         self.entryRoom.place(rely=0.55, relx=0.36, relwidth=0.5, relheight=0.1)
 
         self.assignRoom = BooleanVar(False)
-        self.checkbutton = Checkbutton(self, text="Expand", command=self.toggleRoomEntry, var=self.assignRoom)
-        self.checkbutton.place(rely=0.65, relx=0.3, relwidth=0.4, relheight=0.1)
+        self.checkbutton = Checkbutton(self, text="Assign me to a new room", command=self.toggleRoomEntry, var=self.assignRoom)
+        self.checkbutton.place(rely=0.65, relx=0.25, relwidth=0.5, relheight=0.1)
 
         self.button = Button(self, text='Login', command=self.loginButtonClicked, font=('Helvetica', 16), anchor='center')
         self.button.place(rely=0.75, relx=0.3, relwidth=0.4, relheight=0.1)

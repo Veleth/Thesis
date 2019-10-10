@@ -17,7 +17,8 @@ class Server:
             RESULT_HEADER : self.result,
             TRACE_HEADER : self.trace,
             VAL_HEADER : self.val,
-            USER_LIST_HEADER : self.userList
+            USER_LIST_HEADER : self.userList,
+            ERROR_HEADER: self.error
         }
         self.run()
 
@@ -45,6 +46,8 @@ class Server:
                     print(self.rooms['22'].get_state())
                     time.sleep(1)
                 continue
+            elif action == '8':
+                message = 'ERR|VOE|somecoolval\\'
             else:
                 message = action
             for room in self.rooms.values():
@@ -54,7 +57,7 @@ class Server:
                     player.conn.sendall(message.encode())
 
     def run(self):
-        print(f'Server up and running. Listening at port {self.PORT}')
+        print(f'Server up and running. Listening at {self.HOST}:{self.PORT}')
         threading.Thread(target=self.sender, daemon=True).start()
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.setblocking(False)
@@ -269,6 +272,9 @@ class Server:
 
     def userList(self, message, user):
         self.sendMessage(user, compose(USER_LIST_HEADER, self.listPlayers(user.room)))
+
+    def error(self, message, user):
+        pass
 
     def getUsernameNumber(self, username, players):
         names = [player.name for player in players]
