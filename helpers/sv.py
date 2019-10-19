@@ -18,8 +18,8 @@ def serve(conn, addr):
                 print(data)
                 if not data:
                     break
-                conn.sendall(str(counter).encode())
-                counter += 1
+                # conn.sendall(str(counter).encode())
+                # counter += 1
                 # time.sleep(3)
         except ConnectionResetError:
             print('ConnectionResetError: ', addr, 'forcibly disconnected')
@@ -35,6 +35,10 @@ if (__name__== "__main__"):
         while True:
             try:
                 conn, addr = s.accept()
+                import pyDHE
+                alice = pyDHE.new()
+                key = alice.negotiate(conn)
+                print(key)
                 threading.Thread(target=serve, args=(conn, addr)).start()
                 threading.Thread(target=sendx, args=(conn, addr)).start()
             except KeyboardInterrupt:

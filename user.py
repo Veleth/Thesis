@@ -9,3 +9,5 @@ class User():
         self.value = None
         self.result = None
         self.trace = None
+        self.secret = None
+        self.key = None

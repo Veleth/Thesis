@@ -22,10 +22,18 @@ def snd():
         iter += 1
     print("sending issue")
 
+def keyExchange():
+    pass
+
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #SPECIFY host, port
 s.connect((HOST, PORT))
+import pyDHE
+alice = pyDHE.new()
+key = alice.negotiate(s)
+print(key)
+
 threading.Thread(target=recv).start()
 threading.Thread(target=snd).start()
 

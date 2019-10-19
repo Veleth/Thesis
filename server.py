@@ -1,4 +1,4 @@
-import socket, threading, time, datetime, sys, hashlib, random, re
+import socket, threading, time, datetime, sys, hashlib, random, re, pyDHE
 from user import User
 from room import Room, State
 from queue import Empty
@@ -30,31 +30,32 @@ class Server:
         while True:
             action = input()
             if action == '1':
-                message = 'CHAT|Player1|Generic message|Player2|Ans\\'
+                message = 'CHAT|Player1|Generic message|Player2|Ans;;;'
             elif action == '2':
-                message = 'ROLL|5|6\\' #TODO: Ideas for improvement: add involved players
+                message = 'ROLL|5|6;;;' #TODO: Ideas for improvement: add involved players
             elif action == '3':
-                message = 'ROLL|a8993|abc339\\'
+                message = 'ROLL|a8993|abc339;;;'
             elif action == '4':
-                message = 'RES|2|2\\'
+                message = 'RES|2|2;;;'
             elif action == '5':
-                message = 'RES|2|1|3|3|2\\'
+                message = 'RES|2|1|3|3|2;;;'
             elif action == '6':
-                message = 'TRC|Abc:12+22mod5=4|CDE:21-3mod7=4\\'
+                message = 'TRC|Abc:12+22mod5=4|CDE:21-3mod7=4;;;'
             elif action == '7': #Get room 22 state; for State testing
                 while True:
                     print(self.rooms['22'].get_state())
                     time.sleep(1)
                 continue
             elif action == '8':
-                message = 'ERR|VOE|somecoolval\\'
+                message = 'ERR|VOE|somecoolval;;;'
             else:
                 message = action
             for room in self.rooms.values():
                 room.clear()
                 room.start_action()
                 for player in room.get_players():
-                    player.conn.sendall(message.encode())
+                    message = encrypt(message.encode(), player.key)
+                    player.conn.sendall(message)
 
     def run(self):
         print(f'Server up and running. Listening at {self.HOST}:{self.PORT}')
@@ -77,29 +78,21 @@ class Server:
 
     """ Sends message to a given room, optional parameter
     is the recipient list, by default everyone is a recipient """
-    def sendRoom(self, room, message, players = None):
+    def sendRoom(self, room, header, args, players = None):
         for player in room.get_players():
             if (players == None or player in players):
-                player.conn.sendall(message) #TODO: Extend
-    
-    def sendSeriesRoom(self, room, messages, players = None):
-        for player in room.get_players():
-            if (players == None or player in players):
-                self.sendSeries(player, messages) #TODO: Extend
+                msg = compose(header, args, player.key)
+                player.conn.sendall(msg)
 
-    def sendMessage(self, player, message):
-        player.conn.sendall(message)
-
-    def sendSeries(self, player, messages):
-        for message in messages:
-            self.sendMessage(player, message)
+    def sendMessage(self, player, header, args):
+        msg = compose(header, args, player.key)
+        player.conn.sendall(msg)
 
     def chatBuffer(self, room):
         messages = []
         while True:
             if messages:
-                message = compose(CHAT_HEADER, messages)
-                self.sendRoom(room, message)
+                self.sendRoom(room, CHAT_HEADER, messages)
                 messages = []
             totalLength = sum([len(x) for x in messages])
             #TODO:config
@@ -123,7 +116,7 @@ class Server:
         return lst
 
     def handle(self, data, conn, user):
-        messages = decompose(data)
+        messages = decompose(data, user.key)
         for message in messages:
             m = list(filter(None, message.split(MESSAGE_DELIMITER)))
             print(m)
@@ -135,6 +128,10 @@ class Server:
     def onNewConnection(self, conn, addr):
         user = User(conn, addr)
         conn.setblocking(True)
+        user.secret = pyDHE.new()
+        user.sharedSecret = user.secret.negotiate(conn)
+        user.key = hashlib.pbkdf2_hmac('sha256', str(user.sharedSecret).encode(), b'salt', 100000)
+        #TODO: better salt
         with conn: #Start listening for messages
             print(f'{datetime.datetime.now()} : Connected by {addr}', file=self.LOGFILE)
             try:
@@ -163,8 +160,8 @@ class Server:
                 del self.rooms[user.room.get_number()]
             #Notify other players
             else:
-                self.sendRoom(room, compose(DROPPED_USER_HEADER, [name, int(user.is_GM)]))
-                self.sendRoom(room, compose(USER_LIST_HEADER, self.listPlayers(room)))
+                self.sendRoom(room, DROPPED_USER_HEADER, [name, int(user.is_GM)])
+                self.sendRoom(room, USER_LIST_HEADER, self.listPlayers(room))
 
     def init(self, message, newUser):
         #INIT MESSAGE STRUCTURE ['INIT', '{room_number}', '{name}']
@@ -184,7 +181,7 @@ class Server:
                     break
             room.add_player(newUser)
             newUser.name = username
-            self.sendMessage(newUser, compose(INIT_HEADER, [room_number, username, 0]))
+            self.sendMessage(newUser, INIT_HEADER, [room_number, username, 0])
         else:
             room = Room(room_number)
             self.rooms[room_number] = room
@@ -193,9 +190,9 @@ class Server:
             newUser.name = username
             newUser.is_GM = True
             room.add_player(newUser)
-            self.sendMessage(newUser, compose(INIT_HEADER, [room_number, username, 1]))
-        self.sendRoom(room, compose(NEW_USER_HEADER,[username]))
-        self.sendRoom(room, compose(USER_LIST_HEADER, self.listPlayers(room)))
+            self.sendMessage(newUser, INIT_HEADER, [room_number, username, 1])
+        self.sendRoom(room, NEW_USER_HEADER, [username])
+        self.sendRoom(room, USER_LIST_HEADER, self.listPlayers(room))
 
     def roll(self, message, user):
         room = user.room
@@ -207,7 +204,7 @@ class Server:
                 room.set_state(State.ROLL)
                 timeout = int(message[1])
                 maxNum = int(message[2])
-                msg = compose(ROLL_HEADER, [timeout, maxNum])
+                msg = (ROLL_HEADER, [timeout, maxNum])
                 self.sendRoom(room, msg, participants)
             else:
                 print(f'ERROR [ROLL]: {message} recieved during state {room.get_state()} in room {room}')
@@ -227,7 +224,7 @@ class Server:
             print(f'DEBUG [VAL]: All values received')
             values = room.get_values()
             room.set_state(State.RESULT)
-            self.sendRoom(room, compose(VAL_HEADER, values))
+            self.sendRoom(room, VAL_HEADER, values)
 
     def result(self, message, user):
         room = user.room
@@ -244,7 +241,7 @@ class Server:
             print(f'DEBUG [RES]: All results received')
             results = room.get_results()
             room.set_state(State.IDLE) #TODO: Gather Traces?
-            self.sendRoom(room, compose(RESULT_HEADER, results))                      
+            self.sendRoom(room, RESULT_HEADER, results)                      
 
     def trace(self, message, user):
         room = user.room
@@ -261,7 +258,7 @@ class Server:
             print(f'DEBUG [TRACE]: All values received') #TODO: trace stop and send to all         
             traces = room.get_traces()
             # room.set_state(State.IDLE)
-            self.sendRoom(room, compose(TRACE_HEADER, traces))
+            self.sendRoom(room, TRACE_HEADER, traces)
 
     def runSenderByState(self, state, room):
         return {
@@ -271,7 +268,7 @@ class Server:
         }[state](room)
 
     def userList(self, message, user):
-        self.sendMessage(user, compose(USER_LIST_HEADER, self.listPlayers(user.room)))
+        self.sendMessage(user, USER_LIST_HEADER, self.listPlayers(user.room))
 
     def error(self, message, user):
         pass

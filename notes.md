@@ -2,6 +2,10 @@
 https://www.youtube.com/watch?v=D8-snVfekto for layout
 http://zetcode.com/tkinter/menustoolbars/ for menu
 
+Libs : pip install pycryptodome pyDHE
+Crypto-1.4.1 Naked-0.1.31 pyDHE-1.0.0 pyyaml-5.1.2 shellescape-3.4.1
+pycryptodome-3.9.0
+
 - Polish: roll with user subset
 - Polish: login screen remember choice
 - Optional: Add contest option and contested room state if something goes wrong
@@ -16,7 +20,7 @@ http://zetcode.com/tkinter/menustoolbars/ for menu
 
 ## ROADMAP
 
-Fri - delay next roll (in general and after err); roll decline send back (message); listbox
+Sun - delay next roll (in general and after err); roll decline send back (message); listbox
 
 Future - Remove debug messages, artificial requests/messages, complete TODOs, move functionality appropriately, server-side timeout and override; user list selection
 To decide - splitting
@@ -45,7 +49,7 @@ NOTE: The server can handle information at speeds that make sockets stop sending
 
 [ ] potentially - only 'logout' permanently drops connection
 
-[ ] DF key negotiation & symmetric encryption / Future: ring usage - In thesis: All messages go through the server, all protests might be ignored. Worth distributing the application completely to P2P
+[x] DF key negotiation & symmetric encryption / Future: ring usage - In thesis: All messages go through the server, all protests might be ignored. Worth distributing the application completely to P2P
 https://pycryptodome.readthedocs.io/en/latest/src/cipher/aes.html
 https://www.josephrex.me/symmetric-encryption-in-python/
 https://pl.wikipedia.org/wiki/Protok%C3%B3%C5%82_Diffiego-Hellmana

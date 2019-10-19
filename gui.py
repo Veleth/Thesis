@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import messagebox
 from client import Client
-import threading
+import threading, logging
 from communication import *
 #temporary
 import hashlib
@@ -24,9 +24,9 @@ class GUI():
 
     def launchClient(self, host, port, username, room):
         try:
-            self.client = Client(host, int(port), username, room, gui=self)
             self.switchFrame(ApplicationFrame)
             self.window.geometry('480x720')
+            self.client = Client(host, int(port), username, room, gui=self)
         except:
             self.host = host
             self.port = port
@@ -232,7 +232,7 @@ class ApplicationFrame(Frame):
         self.text.yview_pickplace('end') 
 
     def makeHeader(self, master):
-        self.header = Label(master, text=self.gui.getHeader(), font=('Helvetica', 16))
+        self.header = Label(master, font=('Helvetica', 16))
         self.header.pack()
 
     def setHeader(self, text):

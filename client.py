@@ -1,4 +1,4 @@
-import socket, time, threading, hashlib, sys, random, datetime
+import socket, time, threading, hashlib, sys, random, datetime, pyDHE, logging
 from communication import *
 from calculator import method1 as calculate
 from collections import Counter
@@ -32,17 +32,25 @@ class Client:
             USER_LIST_HEADER : self.userList,
             ERROR_HEADER: self.error
         }
+        negotiator = threading.Thread(target=self.negotiate, daemon=True)
+        negotiator.start()
+        negotiator.join()
         initializer = threading.Thread(target=self.initialize, daemon=True)
         initializer.start()
-        threading.Thread(target=self.recv, daemon=True).start()
-        #TODO: daemon false if problems with recv
-
+        threading.Thread(target=self.recv, daemon=False).start()
+        #TODO: daemon false if problems with recv or client shuts down
+    
+    def negotiate(self):
+        self.secret = pyDHE.new()
+        self.sharedSecret = self.secret.negotiate(self.sock)
+        self.key = hashlib.pbkdf2_hmac('sha256', str(self.sharedSecret).encode(), b'salt', 100000)
+        #TODO: better salt
     def initialize(self):
-        message = compose(INIT_HEADER, filter(None, [self.room, self.username]))
+        message = compose(INIT_HEADER, filter(None, [self.room, self.username]), self.key)
         self.sock.sendall(message)
 
     def handle(self, data):
-        messages = decompose(data)
+        messages = decompose(data, self.key)
         print(messages)
         for message in messages:
             try:
@@ -52,12 +60,13 @@ class Client:
                 else:
                     raise UndefinedHeaderException(m[0])
             except:
-                exit(2)
+                logging.exception('ClientHandleError')
 
     def recv(self): #TODO: change to non-blocking
         try:
             while True:
                 data = self.sock.recv(2048)
+                print(data)
                 if not data:
                     break
                 self.handle(data)
@@ -66,7 +75,9 @@ class Client:
             self.gui.showerror('Connection lost', 'You have lost connection to the server.\nIt might have shut down.')
         except ConnectionAbortedError:
             self.gui.showinfo('Logout', 'You have successfully logged out!')
-        finally:    
+        except:
+            logging.exception('RecvUnhandledException')
+        finally:
             pass #TODO: something?
 
     def validated_input(self, message):
@@ -96,7 +107,8 @@ class Client:
     def init(self, message):
         self.room = message[1]
         self.username = message[2]
-        self.gui.checkNameChange(message[2])
+        if self.gui:
+            self.gui.checkNameChange(message[2])
         self.isGM = bool(int(message[3]))
         if self.isGM:
             self.gui.prepareCommandFrame()
@@ -141,11 +153,11 @@ class Client:
         if self.ownValue in values:
             self.ownResult, self.ownTrace = calculate(values, self.maxNum)
             self.print(f'Your calculation: {self.ownResult}')
-            message = compose(RESULT_HEADER, [self.ownResult])
+            message = compose(RESULT_HEADER, [self.ownResult], self.key)
             self.sock.sendall(message)
         else:
             self.showwarning('Value not present', f'Your value {self.ownValue} not present in {message}. The server has been notified.')
-            msg = compose(ERROR_HEADER, [VALUE_OMITTED_ERROR, self.ownValue])
+            msg = compose(ERROR_HEADER, [VALUE_OMITTED_ERROR, self.ownValue], self.key)
             self.sock.sendall(msg)
 
     """Players' traces"""    
@@ -222,16 +234,16 @@ class Client:
     def sendChat(self, message):
         #TODO: remove DDOS test
         # for i in range(1,1000):
-        #     msg = compose(CHAT_HEADER, [self.username, f'{message}{i}'])
+        #     msg = compose(CHAT_HEADER, [self.username, f'{message}{i}'], self.key)
         #     self.sock.sendall(msg)
         #     time.sleep(0.01)
-        msg = compose(CHAT_HEADER, [self.username, message])
+        msg = compose(CHAT_HEADER, [self.username, message], self.key)
         self.sock.sendall(msg)
 
     def sendValue(self, seed):
         self.ownValue = hashlib.sha256(f'{time.time()}{self.rng.random()}{seed}'.encode()).hexdigest()
         print('mood')
-        message = compose(VAL_HEADER, [self.ownValue])
+        message = compose(VAL_HEADER, [self.ownValue], self.key)
         self.print(f'DEBUG: value sent - {self.ownValue}')
         self.sock.sendall(message)
         return self.ownValue
@@ -243,7 +255,7 @@ class Client:
 
     def startRoll(self, timeout, maxNum):
         #client -> server ['ROLL', '{timeout}', '{maxNum}']
-        message = compose(ROLL_HEADER, [timeout, maxNum])
+        message = compose(ROLL_HEADER, [timeout, maxNum], self.key)
         self.sock.sendall(message)
 
 #TODO: Remove later

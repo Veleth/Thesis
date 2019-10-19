@@ -1,10 +1,12 @@
+from Crypto.Cipher import Salsa20
+
 """
 Module with definitions required for bilateral client-server communication.
-It contains constants, rudimentary functions, and documentation.
+It contains constants, functions, and documentation.
 If the protocol changes, only this file needs to be altered.
 """
 
-MESSAGE_END = '\\'
+MESSAGE_END = ';;;'
 MESSAGE_DELIMITER = '|'
 
 INIT_HEADER = 'INIT'    # For server: Initialization request, for client: confirmation and response
@@ -71,17 +73,37 @@ ROOM_FULL_ERROR = 'RFE'           #Only server -> client
 
 IPADDR='127.0.0.1'#TODO: Remove IP / config?
 
-def compose(header, args):
-    msg = header
+def compose(header, args, key=None):
+    message = header
     for arg in args:
-        msg += MESSAGE_DELIMITER
-        msg += str(arg)
-    msg += MESSAGE_END
-    return msg.encode()
+        message += MESSAGE_DELIMITER
+        message += str(arg)
+    if key:
+        message = encrypt(message, key)
+        message += MESSAGE_END.encode()
+    else:
+        message += MESSAGE_END
+    return message
 
-def decompose(message):
-    message = message.decode()
-    return list(filter(None, message.split(MESSAGE_END)))
+def decompose(message, key=None):
+    messages = list(filter(None, message.split(MESSAGE_END.encode())))
+    decomposed = []
+    for msg in messages:
+        if key:
+            contents = decrypt(msg, key)
+        contents = contents.decode()
+        decomposed.append(contents)
+    return decomposed
+def encrypt(message, key):
+    print('encrypt')
+    cipher = Salsa20.new(key)
+    return cipher.nonce + cipher.encrypt(message.encode())
+
+def decrypt(message, key):
+    print('decrypt')
+    nonce, secret = message[:8], message[8:]
+    cipher = Salsa20.new(key, nonce=nonce)
+    return cipher.decrypt(secret)
 
 class UndefinedHeaderException(Exception):
     """Raised when the message header is not in HEADERS"""
