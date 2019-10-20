@@ -32,7 +32,7 @@ class Server:
             if action == '1':
                 message = 'CHAT|Player1|Generic message|Player2|Ans;;;'
             elif action == '2':
-                message = 'ROLL|5|6;;;' #TODO: Ideas for improvement: add involved players
+                message = 'ROLL|5|6;;;'
             elif action == '3':
                 message = 'ROLL|a8993|abc339;;;'
             elif action == '4':
@@ -199,13 +199,12 @@ class Server:
         if user.is_GM:
             if room.get_state() is State.IDLE:
                 room.clear()
-                participants = message[3:] or None #None if there's no player names if the message
+                participants = self.getParticipants(room, message[3:]) #None if there's no player names if the message
                 room.start_action(participants)
                 room.set_state(State.ROLL)
                 timeout = int(message[1])
                 maxNum = int(message[2])
-                msg = (ROLL_HEADER, [timeout, maxNum])
-                self.sendRoom(room, msg, participants)
+                self.sendRoom(room, ROLL_HEADER, [timeout, maxNum], participants)
             else:
                 print(f'ERROR [ROLL]: {message} recieved during state {room.get_state()} in room {room}')
     
@@ -237,10 +236,10 @@ class Server:
             print(f'ERROR [RES]: {message} \nnot accepted for {user.name} in room {room}')
 
     def resultSender(self, room):
-        if len(room.get_participants()) == len(room.get_results()): #TODO: get participants
+        if len(room.get_participants()) == len(room.get_results()):
             print(f'DEBUG [RES]: All results received')
             results = room.get_results()
-            room.set_state(State.IDLE) #TODO: Gather Traces?
+            room.set_state(State.IDLE)
             self.sendRoom(room, RESULT_HEADER, results)                      
 
     def trace(self, message, user):
@@ -283,6 +282,17 @@ class Server:
         while str(i) in self.rooms.keys():
             i += 1
         return f'{i}'
+
+    def getParticipants(self, room, playerList):
+        if not playerList:
+            return None
+        participants = []
+        for player in room.get_players():
+            if (player.name in playerList):
+                participants.append(player)
+        if len(playerList) != len(participants):
+            print(f'[DEBUG] Some error in participant list: {playerList} submitted, but {[p.name for p in room.get_players()]} returned')
+        return participants
 
     def chat(self, message, user):
         room = user.room

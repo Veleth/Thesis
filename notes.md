@@ -15,15 +15,13 @@ pycryptodome-3.9.0
 - Server exception handling
 - server-side timeout
 - Client exception handle on leave
-- ?: split large messages into series (values, traces)
 - Message length - limitation: possibly get the client to recieve parts of the message separately? (Or limit users per room, then add kicking)
 
 ## ROADMAP
+today - listbox, user limit per room
+soon - delay next roll (in general and after err); roll decline send back (message); dark mode; https://coolors.co/95a3a4-b7d1da-424f6b-fdfffc-1c1c1c
 
-Sun - delay next roll (in general and after err); roll decline send back (message); listbox
-
-Future - Remove debug messages, artificial requests/messages, complete TODOs, move functionality appropriately, server-side timeout and override; user list selection
-To decide - splitting
+Future - Remove debug messages, artificial requests/messages, complete TODOs, server-side timeout and override;, salt
 TESTING
 https://www.youtube.com/watch?v=ULywIB97XfA LISTBOX
 

@@ -19,7 +19,7 @@ class GUI():
         
         self._frame = None
         self.switchFrame(LoginFrame)
-        # self.launchClient(host=IPADDR, port=8000, username=str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]) , room='22')#TODO: Remove
+        self.launchClient(host=IPADDR, port=8000, username=str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]) , room='22')#TODO: Remove
         self.window.mainloop()
 
     def launchClient(self, host, port, username, room):
@@ -28,6 +28,8 @@ class GUI():
             self.window.geometry('480x720')
             self.client = Client(host, int(port), username, room, gui=self)
         except:
+            logging.exception('someerror')#TODO: remove
+            self.window.geometry('360x360')
             self.host = host
             self.port = port
             self.username = username
@@ -71,7 +73,7 @@ class GUI():
             return f'No calculations have taken place yet.\nWait for others to submit their values.'
     def getUserValue(self, timeout, maxNum):
         #TODO: do something with maxNum
-        #check frame
+        #TODO: check frame
         thread = threading.Thread(target=self._frame.getUserValue, daemon=True)
         thread.start()
         thread.join(timeout=timeout)
@@ -88,8 +90,8 @@ class GUI():
         #TODO: check if application frame
         self._frame.setUserList(users)
 
-    def startRoll(self, timeout, maxNum):
-        self.client.startRoll(timeout, maxNum)
+    def startRoll(self, timeout, maxNum, participants):
+        self.client.startRoll(timeout, maxNum, participants)
 
     def exit(self):
         if hasattr(self, 'client'):
@@ -157,7 +159,7 @@ class ApplicationFrame(Frame):
             return
         self.entryDone.set(True)
         self.valEntry.config(state=DISABLED)
-        #Overriding value present when the user does not input any value
+        #Overriding value when the user does not input any value
         value = override or self.valEntry.get().replace(MESSAGE_DELIMITER,'').replace(MESSAGE_END, '')
         if value:
             randomness = self.gui.sendValue(value)
@@ -202,7 +204,10 @@ class ApplicationFrame(Frame):
         #TODO: Data validation and prompt
         timeout = self.timeoutSpinbox.get()
         maxNum = self.maxNumSpinbox.get()
-        self.gui.startRoll(timeout, maxNum)
+        selection = list(self.userList.curselection()) 
+        selectedUsers = [self.userList.get(idx).strip() for idx in [selection if 0 in selection else [0] + selection]]
+        selectedUsers[0] = selectedUsers[0].rstrip('(GM)').strip()
+        self.gui.startRoll(timeout, maxNum, selectedUsers)
 
     def getUserValue(self):
         self.entryDone.set(False)
@@ -214,12 +219,9 @@ class ApplicationFrame(Frame):
         return self.users
 
     def updateUserList(self):
-        self.userList.config(state=NORMAL)
-        self.userList.delete(1.0, END)
+        self.userList.delete(0, END)
         for user in self.users:
             self.userList.insert(END, f'{user}\n')
-        self.userList.delete('end-1c', 'end')
-        self.userList.config(state=DISABLED)
     
     def setUserList(self, users):
         self.users = users
@@ -282,13 +284,13 @@ class ApplicationFrame(Frame):
         self.rollButton.place(rely=0.7, relx=0.2, relwidth=0.6, relheight=0.2)
 
     def makeUserList(self, master):
-        self.userList = Text(master)
+        self.userList = Listbox(master, selectmode=MULTIPLE, activestyle='none')
         self.userListScrollbar = Scrollbar(master)
 
         self.userList.place(relwidth=0.95, relheight=1)
         self.userListScrollbar.place(relx=0.95, relwidth=0.05, relheight=1)
         
-        self.userList.config(yscrollcommand=self.userListScrollbar.set, state=DISABLED)
+        self.userList.config(yscrollcommand=self.userListScrollbar.set, state=NORMAL)
         self.userListScrollbar.config(command=self.userList.yview)
 
     def makeExitArea(self, master):

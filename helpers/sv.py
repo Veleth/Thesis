@@ -24,7 +24,6 @@ def serve(conn, addr):
         except ConnectionResetError:
             print('ConnectionResetError: ', addr, 'forcibly disconnected')
         finally:
-            #TODO: remove the client
             print("Finally") 
             exit()
 

@@ -5,13 +5,12 @@ from collections import Counter
 
 class Client:
     def __init__(self, HOST, PORT, username, room, gui=None):
-        #TODO: Add GM indication
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.gui = gui
         self.sock.connect((HOST, PORT))
         self.room = room
         self.username = username
-        self.maxNum = 0 # Current max roll TODO: Possibly remove
+        self.maxNum = 0
         self.isGM = False
         self.ownValue = None
         self.ownResult = None
@@ -37,7 +36,7 @@ class Client:
         negotiator.join()
         initializer = threading.Thread(target=self.initialize, daemon=True)
         initializer.start()
-        threading.Thread(target=self.recv, daemon=False).start()
+        threading.Thread(target=self.recv, daemon=True).start()
         #TODO: daemon false if problems with recv or client shuts down
     
     def negotiate(self):
@@ -51,7 +50,6 @@ class Client:
 
     def handle(self, data):
         messages = decompose(data, self.key)
-        print(messages)
         for message in messages:
             try:
                 m = list(filter(None, message.split(MESSAGE_DELIMITER)))
@@ -66,7 +64,6 @@ class Client:
         try:
             while True:
                 data = self.sock.recv(2048)
-                print(data)
                 if not data:
                     break
                 self.handle(data)
@@ -78,7 +75,7 @@ class Client:
         except:
             logging.exception('RecvUnhandledException')
         finally:
-            pass #TODO: something?
+            print('Stopped accepting incoming messages')
 
     def validated_input(self, message):
         ans = input(message)
@@ -139,7 +136,7 @@ class Client:
         #server -> client ['RES', '{result1}', '{result2}', ...]
         results = [int(res) for res in message[1:]]
         if self.ownResult in results:   # If our value is in results
-            if (len(set(results)) == 1):  # If all results are the same #TODO: possibly move functionality to server
+            if (len(set(results)) == 1):  # If all results are the same
                 self.print(f'The result is {self.ownResult}')
             else:
                 self.print(f'Something went wrong and not everyone has the same result. They are as follows (result: number of occurences): {dict(Counter(results))}')
@@ -242,7 +239,6 @@ class Client:
 
     def sendValue(self, seed):
         self.ownValue = hashlib.sha256(f'{time.time()}{self.rng.random()}{seed}'.encode()).hexdigest()
-        print('mood')
         message = compose(VAL_HEADER, [self.ownValue], self.key)
         self.print(f'DEBUG: value sent - {self.ownValue}')
         self.sock.sendall(message)
@@ -253,9 +249,10 @@ class Client:
             return hashlib.sha256(f'{time.time()}{self.rng.random()}{self.ownValue}'.encode()).hexdigest() 
         return hashlib.sha256(f'{self.rng.random()}{time.time()}{self.rng.random()}'.encode()).hexdigest()
 
-    def startRoll(self, timeout, maxNum):
-        #client -> server ['ROLL', '{timeout}', '{maxNum}']
-        message = compose(ROLL_HEADER, [timeout, maxNum], self.key)
+    def startRoll(self, timeout, maxNum, participants):
+        #client -> server ['ROLL', '{timeout}', '{maxNum}', '{participant}', '{participant}', ...]
+        args = [timeout, maxNum] + participants if participants else [timeout, maxNum]
+        message = compose(ROLL_HEADER, args, self.key)
         self.sock.sendall(message)
 
 #TODO: Remove later
