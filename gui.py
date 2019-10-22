@@ -71,6 +71,7 @@ class GUI():
             return f'Roll start: {self.client.rollTime}\nYour value: {self.client.ownValue}\n{self.client.ownTrace}'
         else:
             return f'No calculations have taken place yet.\nWait for others to submit their values.'
+    
     def getUserValue(self, timeout, maxNum):
         #TODO: do something with maxNum
         #TODO: check frame

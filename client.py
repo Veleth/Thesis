@@ -44,6 +44,7 @@ class Client:
         self.sharedSecret = self.secret.negotiate(self.sock)
         self.key = hashlib.pbkdf2_hmac('sha256', str(self.sharedSecret).encode(), b'salt', 100000)
         #TODO: better salt
+        
     def initialize(self):
         message = compose(INIT_HEADER, filter(None, [self.room, self.username]), self.key)
         self.sock.sendall(message)
