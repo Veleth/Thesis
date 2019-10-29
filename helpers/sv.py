@@ -34,12 +34,12 @@ if (__name__== "__main__"):
         while True:
             try:
                 conn, addr = s.accept()
-                import pyDHE
-                alice = pyDHE.new()
-                key = alice.negotiate(conn)
-                print(key)
+                # import pyDHE
+                # alice = pyDHE.new()
+                # key = alice.negotiate(conn)
+                # print(key)
                 threading.Thread(target=serve, args=(conn, addr)).start()
-                threading.Thread(target=sendx, args=(conn, addr)).start()
+                # threading.Thread(target=sendx, args=(conn, addr)).start()
             except KeyboardInterrupt:
                 print("Over")
                 exit()

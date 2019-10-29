@@ -1,5 +1,6 @@
 import socket, time, threading, hashlib, sys, random, datetime, pyDHE, logging
 from communication import *
+from config import *
 from calculator import method1 as calculate
 from collections import Counter
 
@@ -42,8 +43,8 @@ class Client:
     def negotiate(self):
         self.secret = pyDHE.new()
         self.sharedSecret = self.secret.negotiate(self.sock)
-        self.key = hashlib.pbkdf2_hmac('sha256', str(self.sharedSecret).encode(), b'salt', 100000)
-        #TODO: better salt
+        salt = str(self.sock.getsockname()).encode()
+        self.key = hashlib.pbkdf2_hmac('sha256', str(self.sharedSecret).encode(), salt, 100000)
         
     def initialize(self):
         message = compose(INIT_HEADER, filter(None, [self.room, self.username]), self.key)
@@ -143,6 +144,8 @@ class Client:
                 self.print(f'Something went wrong and not everyone has the same result. They are as follows (result: number of occurences): {dict(Counter(results))}')
         else:
             self.print(f'Your result {self.ownResult} is not present in results from server: {results}')
+            msg = compose(ERROR_HEADER, [RESULT_DIFFERS_ERROR, self.ownResult], self.key)
+            self.sock.sendall(msg)
         pass
 
     """Players' values"""
@@ -171,7 +174,7 @@ class Client:
     def error(self, message):
         if message[1] in [VALUE_OMITTED_ERROR, RESULT_DIFFERS_ERROR]:
             title = 'Calculation problem'
-            contents = f'One of the users has experienced a problem.\nDo you want to save your trace?'
+            contents = f'There has been an error during calculations.\nDo you want to save your trace?'
             if self.askquestion(title, contents) == 'yes':
                 with open('trace.txt', 'a') as f:
                     f.write(f'---------------\nRoll start: {self.rollTime}\nYour value: {self.ownValue}\n{self.ownTrace}\n')

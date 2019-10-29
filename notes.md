@@ -1,6 +1,7 @@
 # BSc Thesis notes
 https://www.youtube.com/watch?v=D8-snVfekto for layout
 http://zetcode.com/tkinter/menustoolbars/ for menu
+https://realpython.com/python-sockets/#echo-client-and-server basic client server
 
 Libs : pip install pycryptodome pyDHE
 Crypto-1.4.1 Naked-0.1.31 pyDHE-1.0.0 pyyaml-5.1.2 shellescape-3.4.1
@@ -20,7 +21,7 @@ TESTING
 today - user limit per room
 soon - delay next roll (in general and after err); roll decline send back (message); dark mode; https://coolors.co/95a3a4-b7d1da-424f6b-fdfffc-1c1c1c
 
-Future - Remove debug messages, artificial requests/messages, complete TODOs, server-side timeout and override;, salt
+Future - Remove debug messages, artificial requests/messages, complete TODOs, server-side timeout and override;, salt - ip+port
 TESTING
 https://www.youtube.com/watch?v=ULywIB97XfA LISTBOX
 

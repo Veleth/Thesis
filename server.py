@@ -130,7 +130,8 @@ class Server:
         conn.setblocking(True)
         user.secret = pyDHE.new()
         user.sharedSecret = user.secret.negotiate(conn)
-        user.key = hashlib.pbkdf2_hmac('sha256', str(user.sharedSecret).encode(), b'salt', 100000)
+        salt = str(addr).encode()
+        user.key = hashlib.pbkdf2_hmac('sha256', str(user.sharedSecret).encode(), salt, 100000)
         #TODO: better salt
         with conn: #Start listening for messages
             print(f'{datetime.datetime.now()} : Connected by {addr}', file=self.LOGFILE)
@@ -198,13 +199,16 @@ class Server:
         room = user.room
         if user.is_GM:
             if room.get_state() is State.IDLE:
-                room.clear()
-                participants = self.getParticipants(room, message[3:]) #None if there's no player names if the message
-                room.start_action(participants)
-                room.set_state(State.ROLL)
-                timeout = int(message[1])
-                maxNum = int(message[2])
-                self.sendRoom(room, ROLL_HEADER, [timeout, maxNum], participants)
+                if time.time() > room.nextRollAfter:
+                    room.clear()
+                    participants = self.getParticipants(room, message[3:]) #None if there's no player names if the message
+                    room.start_action(participants)
+                    room.set_state(State.ROLL)
+                    timeout = int(message[1])
+                    maxNum = int(message[2])
+                    self.sendRoom(room, ROLL_HEADER, [timeout, maxNum], participants)
+                else:
+                    self.sendMessage(user, ERROR_HEADER, [ROLL_TOO_SOON_ERROR, round(time.time()-room.nextRollAfter)])
             else:
                 print(f'ERROR [ROLL]: {message} recieved during state {room.get_state()} in room {room}')
     
@@ -240,6 +244,7 @@ class Server:
             print(f'DEBUG [RES]: All results received')
             results = room.get_results()
             room.set_state(State.IDLE)
+            room.nextRollAfter = time.time()+5 if not room.problem else time.time()+15
             self.sendRoom(room, RESULT_HEADER, results)                      
 
     def trace(self, message, user):
@@ -270,7 +275,9 @@ class Server:
         self.sendMessage(user, USER_LIST_HEADER, self.listPlayers(user.room))
 
     def error(self, message, user):
+        #TODO: set room.problem
         pass
+    #TODO: implement
 
     def getUsernameNumber(self, username, players):
         names = [player.name for player in players]

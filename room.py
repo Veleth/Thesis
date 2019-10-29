@@ -11,6 +11,8 @@ class Room:
         self.missing = 0
         self.state = State.IDLE
         self.messageQueue = Queue()
+        self.nextRollAfter = 0
+        self.problem = False
 
     def add_player(self, player):
         self.players.append(player)

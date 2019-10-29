@@ -56,16 +56,19 @@ USER_LIST_HEADER, ERROR_HEADER]
 
 VALUE_OMITTED_ERROR = 'VOE'       #Client -> server -> client
                                   # message = value
+#C
 
 RESULT_DIFFERS_ERROR = 'RDE'      #Client -> server -> client
                                   # message = result
-
-VALUE_NOT_ACCEPTED_ERROR = 'VNAE' #Only server -> client
+#C
 
 ROLL_TOO_SOON_ERROR = 'RTSE'      #Only server -> client
                                   #message = time
-                                  
+#S
+
 ROOM_FULL_ERROR = 'RFE'           #Only server -> client
+
+INPUT_TOO_LONG_ERROR = 'ITLE'  #Only server -> client
 
 
 IPADDR='127.0.0.1'#TODO: Remove IP / config?
