@@ -54,6 +54,7 @@ HEADERS = [INIT_HEADER, ROLL_HEADER, CHAT_HEADER, RESULT_HEADER,
 TRACE_HEADER, VAL_HEADER, INFO_HEADER, NEW_USER_HEADER, DROPPED_USER_HEADER,
 USER_LIST_HEADER, ERROR_HEADER]
 
+#TODO: Test
 VALUE_OMITTED_ERROR = 'VOE'       #Client -> server -> client
                                   # message = value
 #C
@@ -67,11 +68,10 @@ ROLL_TOO_SOON_ERROR = 'RTSE'      #Only server -> client
 #S
 
 ROOM_FULL_ERROR = 'RFE'           #Only server -> client
+#S
 
-INPUT_TOO_LONG_ERROR = 'ITLE'  #Only server -> client
-
-
-IPADDR='127.0.0.1'#TODO: Remove IP / config?
+INPUT_TOO_LONG_ERROR = 'ITLE'     #Only server -> client
+#S
 
 def compose(header, args, key=None):
     message = header

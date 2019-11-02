@@ -3,6 +3,7 @@ from user import User
 from room import Room, State
 from queue import Empty
 from communication import *
+from config import IPADDR, MAX_PLAYERS_PER_ROOM, MAX_STRING_LENGTH
 
 class Server:
     def __init__(self, HOST, PORT, LOGFILE=sys.stdout):
@@ -167,6 +168,9 @@ class Server:
     def init(self, message, newUser):
         #INIT MESSAGE STRUCTURE ['INIT', '{room_number}', '{name}']
         #(For room assignment)  ['INIT', '', '{name}']
+        if [item for item in message if len(item) > MAX_STRING_LENGTH]:
+            self.sendMessage(newUser, ERROR_HEADER, [INPUT_TOO_LONG_ERROR])
+            return
         if len(message) < 3:
             room_number = self.findRoomNumber()
             username  = message[1]
@@ -175,6 +179,9 @@ class Server:
             username = message[2]
         if room_number in self.rooms:
             room = self.rooms[room_number]
+            if len(room.get_players()) >= MAX_PLAYERS_PER_ROOM:
+                self.sendMessage(newUser, ERROR_HEADER, [ROOM_FULL_ERROR])
+                return
             newUser.room = room
             for user in room.get_players():
                 if user.name == username and user is not newUser:

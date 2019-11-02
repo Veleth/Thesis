@@ -11,7 +11,6 @@ TO-DOs:
 
 - Code polishing: unify names to use camelcase in gui/client/server/room/user
 - Delay subsequent rolls
-- Server exception handling
 - User limit per room; server declining connection if name too long etc
 - Config in config file
 - (Optional) Dark mode

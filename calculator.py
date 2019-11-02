@@ -1,7 +1,10 @@
 
-#Unified standard for calculator modules:
-#Input: values (Hex array) and maximal number (Int)
-#Output: result (Int) and trace (String)
+"""
+Unified standard for calculator modules:
+Input: values (Hex array) and maximal number (Int)
+Output: result (Int) and trace (String)
+"""
+
 def method1(values, maxNum):
     import random
 

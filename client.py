@@ -258,7 +258,3 @@ class Client:
         args = [timeout, maxNum] + participants if participants else [timeout, maxNum]
         message = compose(ROLL_HEADER, args, self.key)
         self.sock.sendall(message)
-
-#TODO: Remove later
-if __name__=='__main__':
-    client = Client(IPADDR, 8000, username = str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]), room=22)
