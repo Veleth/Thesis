@@ -25,7 +25,6 @@ class Client:
             CHAT_HEADER : self.chat,
             RESULT_HEADER : self.result,
             VAL_HEADER : self.val,
-            TRACE_HEADER : self.trace,
             INFO_HEADER : self.info,
             NEW_USER_HEADER : self.newUser,
             DROPPED_USER_HEADER : self.droppedUser,
@@ -53,6 +52,7 @@ class Client:
     def handle(self, data):
         messages = decompose(data, self.key)
         for message in messages:
+            print(message)
             try:
                 m = list(filter(None, message.split(MESSAGE_DELIMITER)))
                 if m[0] in self.dispatch.keys():
@@ -71,23 +71,13 @@ class Client:
                 self.handle(data)
         except ConnectionResetError:
             self.gui.logout()
-            self.gui.showerror('Connection lost', 'You have lost connection to the server.\nIt might have shut down.')
+            self.gui.showError('Connection lost', 'You have lost connection to the server.\nIt might have shut down.')
         except ConnectionAbortedError:
-            self.gui.showinfo('Logout', 'You have successfully logged out!')
+            self.gui.showInfo('Logout', 'You have successfully logged out!')
         except:
             logging.exception('RecvUnhandledException')
         finally:
             print('Stopped accepting incoming messages')
-
-    def validated_input(self, message):
-        ans = input(message)
-        while not ans.isalnum():
-            print("Wrong! Only alphanumeric non-empty strings allowed. Try again!")
-            ans = input(message)
-        return ans
-
-    def validated_chat(self, message):
-        return message.replace(MESSAGE_END, '').replace(MESSAGE_DELIMITER, '')
 
     def clear(self):
         self.ownValue = None
@@ -110,7 +100,7 @@ class Client:
             self.gui.checkNameChange(message[2])
         self.isGM = bool(int(message[3]))
         if self.isGM:
-            self.gui.prepareCommandFrame()
+            self.gui.addGmElements()
         self.gui.refreshHeader()
     
     """Call to roll by GM"""
@@ -157,15 +147,9 @@ class Client:
             message = compose(RESULT_HEADER, [self.ownResult], self.key)
             self.sock.sendall(message)
         else:
-            self.showwarning('Value not present', f'Your value {self.ownValue} not present in {message}. The server has been notified.')
+            self.showWarning('Value not present', f'Your value {self.ownValue} not present in {message}. The server has been notified.')
             msg = compose(ERROR_HEADER, [VALUE_OMITTED_ERROR, self.ownValue], self.key)
             self.sock.sendall(msg)
-
-    """Players' traces"""    
-    def trace(self, message):
-        for trace in message[1:]:
-            self.traces += trace 
-        pass #TODO: decide
 
     def userList(self, message):
         users = message[1:]
@@ -175,11 +159,15 @@ class Client:
         if message[1] in [VALUE_OMITTED_ERROR, RESULT_DIFFERS_ERROR]:
             title = 'Calculation problem'
             contents = f'There has been an error during calculations.\nDo you want to save your trace?'
-            if self.askquestion(title, contents) == 'yes':
+            if self.askQuestion(title, contents) == 'yes':
                 with open('trace.txt', 'a') as f:
                     f.write(f'---------------\nRoll start: {self.rollTime}\nYour value: {self.ownValue}\n{self.ownTrace}\n')
-                self.showinfo('Success', 'Trace successfully saved!')
-        pass #TODO: fix, refine, complete, split
+                self.showInfo('Success', 'Trace successfully saved!')
+        elif message[1] == ROLL_TOO_SOON_ERROR:
+            self.print(f'You tried rolling too soon. Try waiting {message[2]}s.')
+        elif message[1] in [INPUT_TOO_LONG_ERROR, ROOM_FULL_ERROR]:
+            msg = 'The selected room is full, try again later' if message[1] == ROOM_FULL_ERROR else 'A string you entered was too long, please try logging in with different data'
+            self.gui.logout(msg)
 
     """Info from server, handle basically like chat"""
     def info(self, message):
@@ -216,17 +204,17 @@ class Client:
         else:
             pass 
 
-    def askquestion(self, title, message):
-        return self.gui.askquestion(title, message)
+    def askQuestion(self, title, message):
+        return self.gui.askQuestion(title, message)
 
-    def showerror(self, title, message):
-        self.gui.showerror(title, message)
+    def showError(self, title, message):
+        self.gui.showError(title, message)
 
-    def showwarning(self, title, message):
-        self.gui.showwarning(title, message)
+    def showWarning(self, title, message):
+        self.gui.showWarning(title, message)
 
-    def showinfo(self, title, message):
-        self.gui.showinfo(title, message)
+    def showInfo(self, title, message):
+        self.gui.showInfo(title, message)
 
     """
     Client functionality called by the GUI

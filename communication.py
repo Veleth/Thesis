@@ -25,10 +25,6 @@ RESULT_HEADER = 'RES'   # For server: result from a player, for client: result f
                         # server -> client ['RES', '{result1}', '{result2}', ...] 
                         # client -> server ['RES', '{result}']
 
-TRACE_HEADER = 'TRC'    # For server: trace from a player, for client: trace from others
-                        # server -> client ['TRC', '{trace1}', '{trace2}'] (log) 
-                        # client -> server ['ROLL', '{trace}']
-
 VAL_HEADER = 'VAL'      # For server: Random value from the user, for client: Random values from all the users
                         # client -> server ['VAL', {value}]
                         # server -> client ['VAL', '{value1}', '{value2}', ...]
@@ -50,28 +46,27 @@ ERROR_HEADER = 'ERR'    # For client : notification when their input is not acce
                         # client -> server ['ERR' '{error_type}', '{message}']
                         # server -> client ['ERR' '{error_type}', '{message}']
 
-HEADERS = [INIT_HEADER, ROLL_HEADER, CHAT_HEADER, RESULT_HEADER, 
-TRACE_HEADER, VAL_HEADER, INFO_HEADER, NEW_USER_HEADER, DROPPED_USER_HEADER,
+HEADERS = [INIT_HEADER, ROLL_HEADER, CHAT_HEADER, RESULT_HEADER, VAL_HEADER, INFO_HEADER, NEW_USER_HEADER, DROPPED_USER_HEADER,
 USER_LIST_HEADER, ERROR_HEADER]
 
 #TODO: Test
 VALUE_OMITTED_ERROR = 'VOE'       #Client -> server -> client
                                   # message = value
-#C
+#C S C
 
 RESULT_DIFFERS_ERROR = 'RDE'      #Client -> server -> client
                                   # message = result
-#C
+#C S C
 
 ROLL_TOO_SOON_ERROR = 'RTSE'      #Only server -> client
                                   #message = time
-#S
+#S C
 
 ROOM_FULL_ERROR = 'RFE'           #Only server -> client
-#S
+#S C
 
 INPUT_TOO_LONG_ERROR = 'ITLE'     #Only server -> client
-#S
+#S C
 
 def compose(header, args, key=None):
     message = header

@@ -2,23 +2,20 @@
 https://www.youtube.com/watch?v=D8-snVfekto for layout
 http://zetcode.com/tkinter/menustoolbars/ for menu
 https://realpython.com/python-sockets/#echo-client-and-server basic client server
+http://www.science.smith.edu/dftwiki/index.php/Color_Charts_for_TKinter colors in TKinter
 
 Libs : pip install pycryptodome pyDHE
 Crypto-1.4.1 Naked-0.1.31 pyDHE-1.0.0 pyyaml-5.1.2 shellescape-3.4.1
 pycryptodome-3.9.0
 
 TO-DOs:
-
-- Code polishing: unify names to use camelcase in gui/client/server/room/user
-- Delay subsequent rolls
-- User limit per room; server declining connection if name too long etc
+- GUI startRoll validation
 - Config in config file
 - (Optional) Dark mode
 TESTING
 
 ## ROADMAP
-today - user limit per room
-soon - delay next roll (in general and after err); roll decline send back (message); dark mode; https://coolors.co/95a3a4-b7d1da-424f6b-fdfffc-1c1c1c
+soon - dark mode; https://coolors.co/95a3a4-b7d1da-424f6b-fdfffc-1c1c1c
 
 Future - Remove debug messages, artificial requests/messages, complete TODOs, server-side timeout and override;, salt - ip+port
 TESTING
@@ -62,7 +59,7 @@ https://www.josephrex.me/symmetric-encryption-in-python/
 https://pl.wikipedia.org/wiki/Protok%C3%B3%C5%82_Diffiego-Hellmana
 
 
-[ ] server-side validation of user login data (size)
+[x] server-side validation of user login data (size)
 
 
 debugging; testing (vega/skipfish for security)

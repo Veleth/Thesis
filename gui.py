@@ -4,6 +4,7 @@ from client import Client
 import threading, logging
 from communication import *
 #temporary
+from config import IPADDR, MIN_USERNAME_CHARS, MAX_USERNAME_CHARS, MIN_ROOM_NUMBER_CHARS, MAX_ROOM_NUMBER_CHARS
 import hashlib
 import time
 import random
@@ -83,9 +84,9 @@ class GUI():
         else:
             self._frame.sendValue(self.client.getRandomValue())
 
-    def prepareCommandFrame(self):
+    def addGmElements(self):
         #TODO: check if application frame
-        self._frame.prepareCommandFrame() 
+        self._frame.addGmElements() 
 
     def setUserList(self, users):
         #TODO: check if application frame
@@ -100,27 +101,29 @@ class GUI():
         self.window.destroy()
         exit()
     
-    def logout(self):
+    def logout(self, alert=None):
         if hasattr(self, 'client'):
             self.client.sock.close()
         self.window.geometry('360x360')
         self.switchFrame(LoginFrame)
+        if alert:
+            self.showwarning('A problem occured', alert)
 
     def checkNameChange(self, name):
         if hasattr(self, 'enteredUsername'):
             if self.enteredUsername != name:
                 self.showwarning('Name not available', f'The requested name {self.enteredUsername} was not available.\n {name} is your username instead.')
 
-    def askquestion(self, title, message):
+    def askQuestion(self, title, message):
         return messagebox.askquestion(title, message)
 
-    def showerror(self, title, message):
+    def showError(self, title, message):
         messagebox.showerror(title, message)
 
-    def showwarning(self, title, message):
+    def showWarning(self, title, message):
         messagebox.showwarning(title, message)
 
-    def showinfo(self, title, message):
+    def showInfo(self, title, message):
         messagebox.showinfo(title, message)
 
 class ApplicationFrame(Frame):
@@ -196,19 +199,33 @@ class ApplicationFrame(Frame):
         trace = self.gui.getTrace()
         messagebox.showinfo('Your trace', trace)
 
+    def addGmElements(self):
+        self.prepareCommandFrame()
+        self.prepareSelectAllBtn()
+
     def prepareCommandFrame(self):
         self.commandFrame = Frame(self)
         self.commandFrame.place(rely=0.7, relwidth=0.5, relheigh=0.2)
         self.makeCommandArea(self.commandFrame)
 
+    def prepareSelectAllBtn(self):
+        self.selectAllBtn = Button(self.userListFrame, text='Select all', command=self.selectAll)
+        self.selectAllBtn.place(relx=0.3, relwidth=0.4, rely=0.9, relheight=0.1)
+
     def startRoll(self):
         #TODO: Data validation and prompt
+        errors = ''
         timeout = self.timeoutSpinbox.get()
+        errors += self.validateTimeout(timeout)
         maxNum = self.maxNumSpinbox.get()
-        selection = list(self.userList.curselection()) 
-        selectedUsers = [self.userList.get(idx).strip() for idx in [selection if 0 in selection else [0] + selection]]
-        selectedUsers[0] = selectedUsers[0].rstrip('(GM)').strip()
-        self.gui.startRoll(timeout, maxNum, selectedUsers)
+        errors += self.validateMaxNum(maxNum)
+        if errors:
+            pass #TODO
+        else:
+            selection = list(self.userList.curselection()) 
+            selectedUsers = [self.userList.get(idx).strip() for idx in [selection if 0 in selection else [0] + selection]]
+            selectedUsers[0] = selectedUsers[0].rstrip('(GM)').strip()
+            self.gui.startRoll(timeout, maxNum, selectedUsers)
 
     def getUserValue(self):
         self.entryDone.set(False)
@@ -240,6 +257,15 @@ class ApplicationFrame(Frame):
 
     def setHeader(self, text):
         self.header.config(text=text)
+
+    def selectAll(self):
+        self.userList.select_set(0,END)
+
+    def validateTimeout(self, timeout):
+        pass #TODO: implement
+
+    def validateMaxNum(self, maxNum):
+        pass #TODO: implement
 
     def makeTextArea(self, master):
         self.text = Text(master)
@@ -288,15 +314,15 @@ class ApplicationFrame(Frame):
         self.userList = Listbox(master, selectmode=MULTIPLE, activestyle='none')
         self.userListScrollbar = Scrollbar(master)
 
-        self.userList.place(relwidth=0.95, relheight=1)
-        self.userListScrollbar.place(relx=0.95, relwidth=0.05, relheight=1)
+        self.userList.place(relwidth=0.95, relheight=0.9)
+        self.userListScrollbar.place(relx=0.95, relwidth=0.05, relheight=0.9)
         
         self.userList.config(yscrollcommand=self.userListScrollbar.set, state=NORMAL)
         self.userListScrollbar.config(command=self.userList.yview)
 
     def makeExitArea(self, master):
         self.exitBtn = Button(master, text='Logout', command=self.gui.logout)
-        self.exitBtn.pack()
+        self.exitBtn.place(relx=0.3, relwidth=0.4, rely=0.6)
 
 class LoginFrame(Frame):
     def __init__(self, master, gui, host=None, port=None, username=None, room=None):
@@ -371,7 +397,6 @@ class LoginFrame(Frame):
 
     def validateHost(self, host):
         msg = ''
-        #TODO: come up with hostname validation
         return msg
     
     def validatePort(self, port):
@@ -384,23 +409,17 @@ class LoginFrame(Frame):
 
     def validateUsername(self, username):
         msg = ''
-        #TODO: Move to config?
         self.gui.enteredUsername = username
-        minChars = 1
-        maxChars = 32
-        if len(username) not in range(minChars, maxChars+1):
-            msg += f'Username must be between {minChars} and {maxChars} long\n'
+        if len(username) not in range(MIN_USERNAME_CHARS, MAX_USERNAME_CHARS+1):
+            msg += f'Username must be between {MIN_USERNAME_CHARS} and {MAX_USERNAME_CHARS} long\n'
         if not username.isalnum():
             msg += f'Username must not contain non-alphanumeric characters\n'
         return msg
 
     def validateRoom(self, room):
         msg = ''
-        #TODO: Move to config?
-        minChars = 1
-        maxChars = 20
-        if len(room) not in range(minChars, maxChars+1):
-             msg += f'Room ID must be between {minChars} and {maxChars} long\n'
+        if len(room) not in range(MIN_ROOM_NUMBER_CHARS, MAX_ROOM_NUMBER_CHARS+1):
+             msg += f'Room ID must be between {MIN_ROOM_NUMBER_CHARS} and {MAX_ROOM_NUMBER_CHARS} long\n'
         return msg
 
 if __name__ == '__main__':
