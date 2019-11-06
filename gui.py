@@ -42,15 +42,14 @@ class GUI():
         new_frame = frame_class(self.window, self)
         if self._frame is not None:
             self._frame.destroy()
-        self._frame = new_frame
+        self._frame = new_frame 
         self._frame.place(relx=0.05, rely=0.05, relwidth=0.9, relheight=0.9)
 
     def print(self, message):
-        #Todo: check if application frame
-        self._frame.print(message)
+        if isinstance(self._frame, ApplicationFrame):
+            self._frame.print(message)
 
     def sendChat(self, message):
-        #TODO config:
         maxLength = 140
         self.client.sendChat(message[:maxLength])
     
@@ -58,8 +57,8 @@ class GUI():
         return self.client.sendValue(value)
 
     def refreshHeader(self):
-        #TODO: check if application frame
-        self._frame.setHeader(self.getHeader())
+        if isinstance(self._frame, ApplicationFrame):
+            self._frame.setHeader(self.getHeader())
 
     def getHeader(self):
         return f'{self.client.username} (GM) - Room {self.client.room}' if self.client.isGM else f'{self.client.username} - Room {self.client.room}'
@@ -74,23 +73,22 @@ class GUI():
             return f'No calculations have taken place yet.\nWait for others to submit their values.'
     
     def getUserValue(self, timeout, maxNum):
-        #TODO: do something with maxNum
-        #TODO: check frame
-        thread = threading.Thread(target=self._frame.getUserValue, daemon=True)
-        thread.start()
-        thread.join(timeout=timeout)
-        if self._frame.entryDone.get():
-            pass
-        else:
-            self._frame.sendValue(self.client.getRandomValue())
+        if isinstance(self._frame, ApplicationFrame):
+            thread = threading.Thread(target=self._frame.getUserValue, daemon=True)
+            thread.start()
+            thread.join(timeout=timeout)
+            if self._frame.entryDone.get():
+                pass
+            else:
+                self._frame.sendValue(self.client.getRandomValue())
 
     def addGmElements(self):
-        #TODO: check if application frame
-        self._frame.addGmElements() 
+        if isinstance(self._frame, ApplicationFrame):
+            self._frame.addGmElements() 
 
     def setUserList(self, users):
-        #TODO: check if application frame
-        self._frame.setUserList(users)
+        if isinstance(self._frame, ApplicationFrame):
+            self._frame.setUserList(users)
 
     def startRoll(self, timeout, maxNum, participants):
         self.client.startRoll(timeout, maxNum, participants)
@@ -107,12 +105,12 @@ class GUI():
         self.window.geometry('360x360')
         self.switchFrame(LoginFrame)
         if alert:
-            self.showwarning('A problem occured', alert)
+            self.showWarning('A problem occured', alert)
 
     def checkNameChange(self, name):
         if hasattr(self, 'enteredUsername'):
             if self.enteredUsername != name:
-                self.showwarning('Name not available', f'The requested name {self.enteredUsername} was not available.\n {name} is your username instead.')
+                self.showWarning('Name not available', f'The requested name {self.enteredUsername} was not available.\n {name} is your username instead.')
 
     def askQuestion(self, title, message):
         return messagebox.askquestion(title, message)
@@ -213,14 +211,13 @@ class ApplicationFrame(Frame):
         self.selectAllBtn.place(relx=0.3, relwidth=0.4, rely=0.9, relheight=0.1)
 
     def startRoll(self):
-        #TODO: Data validation and prompt
         errors = ''
         timeout = self.timeoutSpinbox.get()
         errors += self.validateTimeout(timeout)
         maxNum = self.maxNumSpinbox.get()
         errors += self.validateMaxNum(maxNum)
         if errors:
-            pass #TODO
+            messagebox.showerror('Input validation failed', f'Your input contains the following errors:\n{errors}')
         else:
             selection = list(self.userList.curselection()) 
             selectedUsers = [self.userList.get(idx).strip() for idx in [selection if 0 in selection else [0] + selection]]
@@ -262,10 +259,20 @@ class ApplicationFrame(Frame):
         self.userList.select_set(0,END)
 
     def validateTimeout(self, timeout):
-        pass #TODO: implement
+        msg = ''
+        if not timeout.isnumeric():
+            msg += f'Timeout should be a number\n'
+        elif int(timeout) not in range(2,300):
+            msg += f'Timeout should not be smaller than 2 seconds and should not exceed 300 seconds\n'
+        return msg
 
     def validateMaxNum(self, maxNum):
-        pass #TODO: implement
+        msg = ''
+        if not maxNum.isnumeric():
+            msg += f'Max number has to be a number\n'
+        elif int(maxNum) < 2:
+            msg += f'Max number cannot be smaller than 2\n'
+        return msg
 
     def makeTextArea(self, master):
         self.text = Text(master)
@@ -297,7 +304,7 @@ class ApplicationFrame(Frame):
 
     def makeCommandArea(self, master):
         self.timeoutLabel = Label(master, text='Timeout', anchor='e')
-        self.timeoutSpinbox = Spinbox(master, from_ = 1, to = 300)
+        self.timeoutSpinbox = Spinbox(master, from_ = 2, to = 300)
 
         self.maxNumLabel = Label(master, text='Max', anchor='e')
         self.maxNumSpinbox = Spinbox(master, from_ = 2, to=10000)
@@ -356,7 +363,7 @@ class LoginFrame(Frame):
         self.button = Button(self, text='Login', command=self.loginButtonClicked, font=('Helvetica', 16), anchor='center')
         self.button.place(rely=0.75, relx=0.3, relwidth=0.4, relheight=0.1)
         
-        #TODO: Later switch
+        # TODO: Later switch
         # if self.gui.host:
         #     self.entryHost.insert(0, self.gui.host)
         # if self.gui.port:
@@ -402,9 +409,9 @@ class LoginFrame(Frame):
     def validatePort(self, port):
         msg = ''
         if not port.isnumeric():
-            msg += f'Port should be a number'
+            msg += f'Port should be a number\n'
         elif int(port) not in range(0,65536):
-            msg += f'Port should be in range 0-65535'
+            msg += f'Port should be in range 0-65535\n'
         return msg
 
     def validateUsername(self, username):

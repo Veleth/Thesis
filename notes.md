@@ -9,7 +9,6 @@ Crypto-1.4.1 Naked-0.1.31 pyDHE-1.0.0 pyyaml-5.1.2 shellescape-3.4.1
 pycryptodome-3.9.0
 
 TO-DOs:
-- GUI startRoll validation
 - Config in config file
 - (Optional) Dark mode
 TESTING

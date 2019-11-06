@@ -20,7 +20,7 @@ Server config
 IPADDR='127.0.0.1'
 
 #Max number of players in one room
-MAX_PLAYERS_PER_ROOM = 20
+MAX_PLAYERS_PER_ROOM = 2
 
 #Max room number or username (server)
-MAX_STRING_LENGTH = 10 #TODO: change to 100
+MAX_STRING_LENGTH = 100

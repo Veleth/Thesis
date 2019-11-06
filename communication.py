@@ -52,21 +52,16 @@ USER_LIST_HEADER, ERROR_HEADER]
 #TODO: Test
 VALUE_OMITTED_ERROR = 'VOE'       #Client -> server -> client
                                   # message = value
-#C S C
 
 RESULT_DIFFERS_ERROR = 'RDE'      #Client -> server -> client
                                   # message = result
-#C S C
 
 ROLL_TOO_SOON_ERROR = 'RTSE'      #Only server -> client
                                   #message = time
-#S C
 
 ROOM_FULL_ERROR = 'RFE'           #Only server -> client
-#S C
 
 INPUT_TOO_LONG_ERROR = 'ITLE'     #Only server -> client
-#S C
 
 def compose(header, args, key=None):
     message = header
@@ -81,7 +76,6 @@ def compose(header, args, key=None):
     return message
 
 def decompose(message, key=None):
-    #TODO: Decomposition when there's no encryption
     messages = list(filter(None, message.split(MESSAGE_END.encode())))
     decomposed = []
     for msg in messages:

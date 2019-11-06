@@ -105,17 +105,14 @@ class Client:
     
     """Call to roll by GM"""
     def roll(self, message):
-        #server -> client ['ROLL', '{timeout}', '{maxNum}']
-        self.print(f'INFO: A roll has been called, enter your random variable') 
-        self.rollTime = datetime.datetime.now()
         timeout,  maxNum = message[1:]
+        self.print(f'INFO: A roll has been called (1-{maxNum}), enter your random variable') 
+        self.rollTime = datetime.datetime.now()
         self.maxNum = int(maxNum)
         self.getInput(int(timeout), int(maxNum))
 
     """Chat messages"""
     def chat(self, message):
-        #server -> client ['CHAT', '{player}', '{chat_message}']
-        #server -> client ['CHAT', '{player}', '{chat_message}', '{player}', '{chat_message}', ...]
         if len(message) > 3:
             #Create an array of tuples (player_name, chat_message)
             for player_name,chat_message in zip(message[1::2], message[2::2]):
@@ -125,10 +122,9 @@ class Client:
 
     """Players' results""" 
     def result(self, message):
-        #server -> client ['RES', '{result1}', '{result2}', ...]
         results = [int(res) for res in message[1:]]
-        if self.ownResult in results:   # If our value is in results
-            if (len(set(results)) == 1):  # If all results are the same
+        if self.ownResult in results:
+            if (len(set(results)) == 1):
                 self.print(f'The result is {self.ownResult}')
             else:
                 self.print(f'Something went wrong and not everyone has the same result. They are as follows (result: number of occurences): {dict(Counter(results))}')
@@ -171,7 +167,6 @@ class Client:
 
     """Info from server, handle basically like chat"""
     def info(self, message):
-        #INFO MESSAGE STRUCTURE ['INFO', "$info_message" (1 or more)]
         self.print(f'INFO: {" ".join(message[1:])}')  
 
     def newUser(self, message):
@@ -242,7 +237,6 @@ class Client:
         return hashlib.sha256(f'{self.rng.random()}{time.time()}{self.rng.random()}'.encode()).hexdigest()
 
     def startRoll(self, timeout, maxNum, participants):
-        #client -> server ['ROLL', '{timeout}', '{maxNum}', '{participant}', '{participant}', ...]
         args = [timeout, maxNum] + participants if participants else [timeout, maxNum]
         message = compose(ROLL_HEADER, args, self.key)
         self.sock.sendall(message)
