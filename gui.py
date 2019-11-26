@@ -1,16 +1,33 @@
+"""
+Gui module
+
+Instance of GUI class is responsible for direct user interaction
+"""
 from tkinter import *
 from tkinter import messagebox
 from client import Client
 import threading, logging
 from communication import *
-#temporary
 from config import IPADDR, MIN_USERNAME_CHARS, MAX_USERNAME_CHARS, MIN_ROOM_NUMBER_CHARS, MAX_ROOM_NUMBER_CHARS
+
+#TODO: remove
 import hashlib
 import time
 import random
-# https://stackoverflow.com/questions/4770993/how-can-i-make-silent-exceptions-louder-in-tkinter
+
+
 class GUI():
+    """
+    GUI Class - responisble for the main window of the GUI
+    Attributes:
+        window        Tk class object, main window of the app
+        _frame        currently displayed frame
+        client        reference to Client class
+    """
     def __init__(self):
+        """
+        Initializes basic window
+        """
         self.window = Tk()
         self.window.title('Login screen')
         self.window.resizable(False,False)
@@ -24,6 +41,14 @@ class GUI():
         self.window.mainloop()
 
     def launchClient(self, host, port, username, room):
+        """
+        Attempts to create a client and change frame to ApplicationFrame
+        Input:
+            host        target server hostname
+            port        target server port
+            username    user-selected username
+            room        user-selected room
+        """
         try:
             self.switchFrame(ApplicationFrame)
             self.window.geometry('480x720')
@@ -39,6 +64,11 @@ class GUI():
             self.switchFrame(LoginFrame)
 
     def switchFrame(self, frame_class):
+        """
+        Changes active frame for GUI
+        Input:
+            frame_class     target frame class
+        """
         new_frame = frame_class(self.window, self)
         if self._frame is not None:
             self._frame.destroy()
@@ -46,33 +76,69 @@ class GUI():
         self._frame.place(relx=0.05, rely=0.05, relwidth=0.9, relheight=0.9)
 
     def print(self, message):
+        """
+        Prints a message from client to textbox in the frame
+        Input: 
+            message     message to be printed
+        """
         if isinstance(self._frame, ApplicationFrame):
             self._frame.print(message)
 
     def sendChat(self, message):
+        """
+        Sends a chat message to the client
+        Input: 
+            message     message to be sent
+        """
         maxLength = 140
         self.client.sendChat(message[:maxLength])
     
     def sendValue(self, value):
+        """
+        Sends a value to the client
+        Input: 
+            value     user-created value
+        """
         return self.client.sendValue(value)
 
     def refreshHeader(self):
+        """
+        Refreshes the header in the Application Frame.
+        """
         if isinstance(self._frame, ApplicationFrame):
             self._frame.setHeader(self.getHeader())
 
     def getHeader(self):
+        """
+        Fetches user information header for Application Frame
+        Output: header with user information
+        """
         return f'{self.client.username} (GM) - Room {self.client.room}' if self.client.isGM else f'{self.client.username} - Room {self.client.room}'
 
     def isGM(self):
+        """
+        Checks if client is a GM
+        Output: boolean
+        """
         return self.client.isGM
 
     def getTrace(self):
+        """
+        Fetches user calculation trace
+        Output: User calculation trace
+        """
         if self.client.ownResult:
             return f'Roll start: {self.client.rollTime}\nYour value: {self.client.ownValue}\n{self.client.ownTrace}'
         else:
             return f'No calculations have taken place yet.\nWait for others to submit their values.'
     
     def getUserValue(self, timeout, maxNum):
+        """
+        Calls appropriate functions and starts a timeout to get user value
+        Input:
+            timeout        time for the user to enter value
+            maxNum         max number that can be calculated in the roll
+        """
         if isinstance(self._frame, ApplicationFrame):
             thread = threading.Thread(target=self._frame.getUserValue, daemon=True)
             thread.start()
@@ -83,23 +149,46 @@ class GUI():
                 self._frame.sendValue(self.client.getRandomValue())
 
     def addGmElements(self):
+        """
+        Adds GM-only elements in the Application Frame
+        """
         if isinstance(self._frame, ApplicationFrame):
             self._frame.addGmElements() 
 
     def setUserList(self, users):
+        """
+        Refreshes the list of users in the Application Frame
+        Input: 
+            users       list of users
+        """
         if isinstance(self._frame, ApplicationFrame):
             self._frame.setUserList(users)
 
     def startRoll(self, timeout, maxNum, participants):
+        """
+        Calls client function that starts the roll
+        Input: 
+            timeout         timeout for the roll
+            maxNum          max number in the roll
+            participants    roll participants
+        """
         self.client.startRoll(timeout, maxNum, participants)
 
     def exit(self):
+        """
+        Exits the program, closing the client socket
+        """
         if hasattr(self, 'client'):
             self.client.sock.close()
         self.window.destroy()
         exit()
     
     def logout(self, alert=None):
+        """
+        Logs out of the current session/room
+        Input:
+            alert(optional)     alert that shows up on logout
+        """
         if hasattr(self, 'client'):
             self.client.sock.close()
         self.window.geometry('360x360')
@@ -108,20 +197,49 @@ class GUI():
             self.showWarning('A problem occured', alert)
 
     def checkNameChange(self, name):
+        """
+        Checks if user name assigned by the server differs from the one entered by them
+        Input:
+            name    name assigned by the server
+        """
         if hasattr(self, 'enteredUsername'):
             if self.enteredUsername != name:
                 self.showWarning('Name not available', f'The requested name {self.enteredUsername} was not available.\n {name} is your username instead.')
 
     def askQuestion(self, title, message):
+        """
+        Opens a question box with specified title and message
+        Input:
+            title       popup title
+            message     popup text
+        """
         return messagebox.askquestion(title, message)
 
     def showError(self, title, message):
+        """
+        Opens an error box with specified title and message
+        Input:
+            title       popup title
+            message     popup text
+        """
         messagebox.showerror(title, message)
 
     def showWarning(self, title, message):
+        """
+        Opens a warning box with specified title and message
+        Input:
+            title       popup title
+            message     popup text
+        """
         messagebox.showwarning(title, message)
 
     def showInfo(self, title, message):
+        """
+        Opens an info box with specified title and message
+        Input:
+            title       popup title
+            message     popup text
+        """
         messagebox.showinfo(title, message)
 
 class ApplicationFrame(Frame):

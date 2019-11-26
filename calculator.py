@@ -1,11 +1,18 @@
-
 """
+Calculator module
+
 Unified standard for calculator modules:
-Input: values (Hex array) and maximal number (Int)
+Input: values (Hex string array) and maxium number (Int)
 Output: result (Int) and trace (String)
 """
 
 def method1(values, maxNum):
+    """
+    This method uses standard Python RNG with the input as a seed.
+    Result distribution is uniform.
+    Input: array of input values, max number
+    Output: calculation result, trace
+    """
     import random
 
     s = ''.join(values)
@@ -16,6 +23,12 @@ def method1(values, maxNum):
     return result, trace
     
 def method2(values, maxNum):
+    """
+    This is an example method to show that methods can be easily swapped. This particular method uses mod operation on the sum of 
+    the hex number array.
+    Input: array of input values, max number
+    Output: calculation result, trace
+    """
     s = sum([int(v, 16) for v in values])
     result = s%maxNum or maxNum #if 0 then maxNum
     if result == maxNum:

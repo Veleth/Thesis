@@ -41,6 +41,52 @@ Appendix - summary in Polish (what the plan was / combine introduction and summa
 Language? Front page?
 count per chapter or subchapter?
 
+debugging; testing (vega/skipfish for security)
+buffer overflow;
+
+grading sheet - faculty website/prof. Cichon
+not too many UML - flowchart better
+emphasis on important stuff i.e. safe generation etc
+
+
+### Questions Vol. 2:
+How to link appendices?
+
+What to keep in the introduction, what to keep in case study?
+Repetitions will happen.
+
+Communication/message examples - how to show them?
+
+Header/message detailed examples? Listing?
+one example ok, details can be included in appendices
+
+Paper deadline? 
+2 jan.
+
+Code deadline?
+same, everything is submitted; appropriate size and name; check every char of the thesis title
+
+Code submission?
+ASAP
+
+Code/paper changes after submission?
+No changes in ASAP, .zip is sent.
+
+Doxygen docstrings or not?
+
+
+MSc studies - 
+
+Code testing? Vega/skipfish have other uses than http servers?
+
+
+### Notes (2):
+Case study - mention that all commits are sent by the users before being sent to them and why one user's input is essentially random
+End problem overview after 3 paragraphs, include `building blocks` paragraph or a couple, and add `possible solutions` subsection
+
+Don't be afraid of long captions in flowcharts, describe images in the text (tix)
+
+CD contents - first appendix - pdf file with the thesis, source codes + documentation (where)
 ### Cons notes:
 [x] user name change notification
 [x] server DDOS protection (message buffer and outgoing message queue with delay)
@@ -60,10 +106,3 @@ https://pl.wikipedia.org/wiki/Protok%C3%B3%C5%82_Diffiego-Hellmana
 
 [x] server-side validation of user login data (size)
 
-
-debugging; testing (vega/skipfish for security)
-buffer overflow;
-
-grading sheet - faculty website/prof. Cichon
-not too many UML - flowchart better
-emphasis on important stuff i.e. safe generation etc

@@ -1,10 +1,13 @@
-from Crypto.Cipher import Salsa20
-
 """
-Module with definitions required for bilateral client-server communication.
+Communication Module
+
+A module with definitions required for bilateral client-server communication.
 It contains constants, functions, and documentation.
 If the protocol changes, only this file needs to be altered.
 """
+
+
+from Crypto.Cipher import Salsa20
 
 MESSAGE_END = ';;;'
 MESSAGE_DELIMITER = '|'
@@ -49,7 +52,6 @@ ERROR_HEADER = 'ERR'    # For client : notification when their input is not acce
 HEADERS = [INIT_HEADER, ROLL_HEADER, CHAT_HEADER, RESULT_HEADER, VAL_HEADER, INFO_HEADER, NEW_USER_HEADER, DROPPED_USER_HEADER,
 USER_LIST_HEADER, ERROR_HEADER]
 
-#TODO: Test
 VALUE_OMITTED_ERROR = 'VOE'       #Client -> server -> client
                                   # message = value
 
@@ -64,6 +66,15 @@ ROOM_FULL_ERROR = 'RFE'           #Only server -> client
 INPUT_TOO_LONG_ERROR = 'ITLE'     #Only server -> client
 
 def compose(header, args, key=None):
+    """
+    Create a message given its content
+    Input
+        header          message header
+        args            message arguments   
+        key (optional)  encryption key
+    Output: 
+        composed message
+    """
     message = header
     for arg in args:
         message += MESSAGE_DELIMITER
@@ -76,6 +87,14 @@ def compose(header, args, key=None):
     return message
 
 def decompose(message, key=None):
+    """
+    Tokenize a message
+    Input
+        message         received message  
+        key (optional)  encryption key
+    Output: 
+        tokenized message
+    """
     messages = list(filter(None, message.split(MESSAGE_END.encode())))
     decomposed = []
     for msg in messages:
@@ -86,10 +105,26 @@ def decompose(message, key=None):
     return decomposed
     
 def encrypt(message, key):
+    """
+    Encrypt a message using Salsa20
+    Input
+        message      message to encrypt  
+        key          encryption key
+    Output: 
+        encrypted message
+    """
     cipher = Salsa20.new(key)
     return cipher.nonce + cipher.encrypt(message.encode())
 
 def decrypt(message, key):
+    """
+    Decrypt an encrypted message
+    Input
+        message      message to decrypt  
+        key          encryption key
+    Output: 
+        decrypted message
+    """
     nonce, secret = message[:8], message[8:]
     cipher = Salsa20.new(key, nonce=nonce)
     return cipher.decrypt(secret)

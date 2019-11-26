@@ -100,7 +100,6 @@ class Server:
         user.sharedSecret = user.secret.negotiate(conn)
         salt = str(addr).encode()
         user.key = hashlib.pbkdf2_hmac('sha256', str(user.sharedSecret).encode(), salt, 100000)
-        #TODO: better salt
         with conn: #Start listening for messages
             print(f'{datetime.datetime.now()} : Connected by {addr}', file=self.LOGFILE)
             try:
@@ -110,7 +109,7 @@ class Server:
                        break
                     self.handle(data, conn, user)
             except ConnectionResetError:
-                print(f'ConnectionResetError: {addr} forcibly disconnected', file=self.LOGFILE)
+                print(f'{datetime.datetime.now()} : {addr} disconnected', file=self.LOGFILE)
             finally:
                 self.endConnection(user)
 
