@@ -54,7 +54,6 @@ class GUI():
             self.window.geometry('480x720')
             self.client = Client(host, int(port), username, room, gui=self)
         except:
-            logging.exception('someerror')#TODO: remove
             self.window.geometry('360x360')
             self.host = host
             self.port = port
@@ -243,7 +242,20 @@ class GUI():
         messagebox.showinfo(title, message)
 
 class ApplicationFrame(Frame):
+    """
+    ApplicationFrame Class - responisble for the application view
+    Attributes:
+        gui          Tk class object, main window of the app
+        users        list of users in the room
+    Other attributes are Tkinter objects (Frame or otherwise), required for some GUI operations
+    """
     def __init__(self, master, gui):
+        """
+        Initializes the frame with the reference to the gui:
+        Input:
+            master            the window with the frame
+            gui               the reference to the GUI object
+        """
         super().__init__(master)
         self.gui = gui
         self.users = []
@@ -269,12 +281,22 @@ class ApplicationFrame(Frame):
         self.makeExitArea(self.exitFrame)
 
     def sendChat(self, event):
+        """
+        Sends a chat message to the client via the GUI object
+        Input: 
+            event     event associated with the chat message being sent
+        """
         chat = self.chatEntry.get().replace(MESSAGE_DELIMITER,'').replace(MESSAGE_END, '')
         if chat:
             self.gui.sendChat(chat)
             self.chatEntry.delete(0, END)
     
     def sendValue(self, override=None):
+        """
+        Sends a value to the client via the GUI object
+        Input: 
+            override    value used if the user does not input anything
+        """
         if self.entryDone.get():
             return
         self.entryDone.set(True)
@@ -300,6 +322,9 @@ class ApplicationFrame(Frame):
             self.traceButton.config(state=NORMAL)
 
     def seeRollInfo(self):
+        """
+        Displays information about the roll in a messagebox
+        """
         info = ''
         details = self.rollDetails
         if details:
@@ -312,23 +337,38 @@ class ApplicationFrame(Frame):
             messagebox.showinfo('Roll summary', f'{info}')
 
     def seeTrace(self):
+        """
+        Displays calculation trace in a messagebox
+        """
         trace = self.gui.getTrace()
         messagebox.showinfo('Your trace', trace)
 
     def addGmElements(self):
+        """
+        Adds GM-related functionality to the front-end
+        """
         self.prepareCommandFrame()
         self.prepareSelectAllBtn()
 
     def prepareCommandFrame(self):
+        """
+        Prepares GUI Frame with GM commands
+        """
         self.commandFrame = Frame(self)
         self.commandFrame.place(rely=0.7, relwidth=0.5, relheigh=0.2)
         self.makeCommandArea(self.commandFrame)
 
     def prepareSelectAllBtn(self):
+        """
+        Prepares a "Select All" button for the user list. GM-only functionality
+        """
         self.selectAllBtn = Button(self.userListFrame, text='Select all', command=self.selectAll)
         self.selectAllBtn.place(relx=0.3, relwidth=0.4, rely=0.9, relheight=0.1)
 
     def startRoll(self):
+        """
+        Starts the roll, GM-only functionality
+        """
         errors = ''
         timeout = self.timeoutSpinbox.get()
         errors += self.validateTimeout(timeout)
@@ -343,40 +383,79 @@ class ApplicationFrame(Frame):
             self.gui.startRoll(timeout, maxNum, selectedUsers)
 
     def getUserValue(self):
+        """
+        Prompts the user to enter a value and waits for them to do it
+        """
         self.entryDone.set(False)
         self.valEntry.config(state=NORMAL)
         self.valLabel.config(text='Enter your randomness')
         self.wait_variable(self.entryDone)
 
     def getUsers(self):
+        """
+        A getter for users in the room
+        Output:
+            a list of users
+        """
         return self.users
 
     def updateUserList(self):
+        """
+        Updates the user list with latest data
+        """
         self.userList.delete(0, END)
         for user in self.users:
             self.userList.insert(END, f'{user}\n')
     
     def setUserList(self, users):
+        """
+        A setter for user lists:
+        Input:
+            users       new list of users
+        """
         self.users = users
         self.updateUserList()
 
     def print(self, message):
+        """
+        Prints messages to appropriate textfield
+        Input:
+            message     message to be printed
+        """
         self.text.config(state=NORMAL)
         self.text.insert(END, message if message.endswith('\n') else f'{message}\n')
         self.text.config(state=DISABLED)
         self.text.yview_pickplace('end') 
 
     def makeHeader(self, master):
+        """
+        Prepares the header Label
+        """
         self.header = Label(master, font=('Helvetica', 16))
         self.header.pack()
 
     def setHeader(self, text):
+        """
+        Changes the header text
+        Input:
+            text        new header text
+        """
         self.header.config(text=text)
 
     def selectAll(self):
+        """
+        Selects all of the users from the list
+        """
         self.userList.select_set(0,END)
 
     def validateTimeout(self, timeout):
+        """
+        Validate user-entered timeout
+        Input:
+            timeout
+        Output:
+            error message or empty string
+        """
         msg = ''
         if not timeout.isnumeric():
             msg += f'Timeout should be a number\n'
@@ -385,6 +464,13 @@ class ApplicationFrame(Frame):
         return msg
 
     def validateMaxNum(self, maxNum):
+        """
+        Validate user-entered maxNum
+        Input:
+            maxNum
+        Output:
+            error message or empty string
+        """
         msg = ''
         if not maxNum.isnumeric():
             msg += f'Max number has to be a number\n'
@@ -393,6 +479,11 @@ class ApplicationFrame(Frame):
         return msg
 
     def makeTextArea(self, master):
+        """
+        Fills the textFrame with contents
+        Input:
+            master      textFrame in the ApplicationFrame
+        """
         self.text = Text(master)
         self.scrollbar = Scrollbar(master)
         self.text.place(relwidth=0.95, relheight=0.95)
@@ -405,6 +496,11 @@ class ApplicationFrame(Frame):
         self.chatEntry.bind('<Return>', self.sendChat)
 
     def makeInputArea(self, master):
+        """
+        Fills the inputFrame with contents
+        Input:
+            master      inputFrame in the ApplicationFrame
+        """
         self.valEntry = Entry(master, state=DISABLED)
         self.valEntry.bind('<Return>', lambda event: self.sendValue())
 
@@ -421,6 +517,11 @@ class ApplicationFrame(Frame):
         self.traceButton.place(relx=0.55, relwidth=0.3, rely = 0.7, relheight=0.2)
 
     def makeCommandArea(self, master):
+        """
+        Fills the commandFrame with contents
+        Input:
+            master      commandFrame in the ApplicationFrame
+        """
         self.timeoutLabel = Label(master, text='Timeout', anchor='e')
         self.timeoutSpinbox = Spinbox(master, from_ = 2, to = 300)
 
@@ -436,6 +537,11 @@ class ApplicationFrame(Frame):
         self.rollButton.place(rely=0.7, relx=0.2, relwidth=0.6, relheight=0.2)
 
     def makeUserList(self, master):
+        """
+        Fills the userListFrame with contents
+        Input:
+            master      userListFrame in the ApplicationFrame
+        """
         self.userList = Listbox(master, selectmode=MULTIPLE, activestyle='none')
         self.userListScrollbar = Scrollbar(master)
 
@@ -446,11 +552,32 @@ class ApplicationFrame(Frame):
         self.userListScrollbar.config(command=self.userList.yview)
 
     def makeExitArea(self, master):
+        """
+        Fills the exitFrame with contents
+        Input:
+            master      exitFrame in the ApplicationFrame
+        """
         self.exitBtn = Button(master, text='Logout', command=self.gui.logout)
         self.exitBtn.place(relx=0.3, relwidth=0.4, rely=0.6)
 
 class LoginFrame(Frame):
+    """
+    LoginFrame Class - responisble for the login view
+    Attributes:
+        gui          Tk class object, main window of the app
+    Other attributes are Tkinter objects, mostly Labels and Entries.
+    """
     def __init__(self, master, gui, host=None, port=None, username=None, room=None):
+        """
+        Initializes LoginFrame
+        Input:
+            master              the window with the frame
+            gui                 the reference to the GUI object
+            host (optional)     for pre-filling user input field
+            port (optional)     for pre-filling user input field
+            username (optional) for pre-filling user input field
+            room (optional)     for pre-filling user input field
+        """
         super().__init__(master)
         self.gui = gui
 
@@ -497,6 +624,9 @@ class LoginFrame(Frame):
         self.entryRoom.insert(0, '22')
 
     def loginButtonClicked(self):
+        """
+        Triggered when "Login" button is clicked. Validates data and attempts login.
+        """
         errors = ''
         host = self.entryHost.get()
         errors += self.validateHost(host)
@@ -515,16 +645,33 @@ class LoginFrame(Frame):
             self.gui.launchClient(host,port,username,room)
 
     def toggleRoomEntry(self):
+        """
+        Triggered when "Assign me a new room" is toggled.
+        """
         if self.assignRoom.get():
             self.entryRoom.config(state=DISABLED)
         else:
             self.entryRoom.config(state=NORMAL)
 
     def validateHost(self, host):
+        """
+        Validate user-entered hostname
+        Input:
+            hostname
+        Output:
+            error message or empty string
+        """
         msg = ''
         return msg
     
     def validatePort(self, port):
+        """
+        Validate user-entered port
+        Input:
+            port
+        Output:
+            error message or empty string
+        """
         msg = ''
         if not port.isnumeric():
             msg += f'Port should be a number\n'
@@ -533,6 +680,13 @@ class LoginFrame(Frame):
         return msg
 
     def validateUsername(self, username):
+        """
+        Validate user-entered username
+        Input:
+            username
+        Output:
+            error message or empty string
+        """
         msg = ''
         self.gui.enteredUsername = username
         if len(username) not in range(MIN_USERNAME_CHARS, MAX_USERNAME_CHARS+1):
@@ -542,6 +696,13 @@ class LoginFrame(Frame):
         return msg
 
     def validateRoom(self, room):
+        """
+        Validate user-entered room number
+        Input:
+            room
+        Output:
+            error message or empty string
+        """
         msg = ''
         if len(room) not in range(MIN_ROOM_NUMBER_CHARS, MAX_ROOM_NUMBER_CHARS+1):
              msg += f'Room ID must be between {MIN_ROOM_NUMBER_CHARS} and {MAX_ROOM_NUMBER_CHARS} long\n'
