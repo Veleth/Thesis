@@ -84,7 +84,7 @@ Code testing? Vega/skipfish have other uses than http servers?
 Case study - mention that all commits are sent by the users before being sent to them and why one user's input is essentially random
 End problem overview after 3 paragraphs, include `building blocks` paragraph or a couple, and add `possible solutions` subsection
 
-Don't be afraid of long captions in flowcharts, describe images in the text (tix)
+Don't be afraid of long captions in flowcharts, describe images in the text (tikz)
 
 CD contents - first appendix - pdf file with the thesis, source codes + documentation (where)
 ### Cons notes:
