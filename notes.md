@@ -79,6 +79,64 @@ MSc studies -
 
 Code testing? Vega/skipfish have other uses than http servers?
 
+### Questions vol. 3:
+
+- TikZ arrows
+
+#### Testing:
+
+Write - every module was tested, how, which assertions were proven.
+Show that functional requirements were met.
+How disconnections/hotjoins are handled - test or prove, for example clone and modify app.
+
+- Include in code?
+No
+
+- What to check/unit test?
+Has to be anything. Monte Carlo cool, for example 30 trials in which a random number > 1 disconnected.
+Not formally, but prove that functional requirements were met.
+
+- How to time rolls?
+Graph, start->get result, for GM only sum time to compute and time to fetch result, for multiple users time the process.
+
+Sender + matplotlib on the server.
+
+- How to simulate heavy loads?
+Execute:
+
+Describe:
+
+- How to test drop ins/ drop outs?
+Execute:
+
+Describe:
+
+- Type Errors and Buffer overflow - which functionalities? How?
+Load balancing and buffer overlow (Describe that the interpreter is resistant)
+
+Test or check?
+
+
+Diagrams? Colors, style, info?
+Leave out complicated stuff, describe in caption
+Simple scheme
+
+Presentation? SD?
+10 min theoretically, little shorter is ok, little longer might be problematic. 8-12 slides most likely. What is the goal, motivation etc. Case analysis, what the problem is, 
+known solutions (MPC, Homomorphic encryption - dangerous because there can be questions). Later the solution - flow chart (screenshots no), later tests, summary - what was done,
+ what wasn't done, what can be added in the future, what is the biggest pride, etc.
+
+Key: distributed system, sell the generation and verification (and explain further)
+
+Always in Polish, presentation can be in English. Beamer.
+Refrain from low-contrast light colors.
+
+
+Teoretycznie 10 minut, odrobinę krótsze - ok. Odrobinę dłuższe może być przerwane. Około 8-12 slajdów. Opisać cel, motywacje, itp. Case study, opis problemu, dostepne rozwiązania.
+Później opis rozwiązania, flow chart spoko, bez screenshotów. Następnie testy, podsumowanie - co zostało zrobione, co nie zostało zrobione, najfajniejsze elementy, coś z czego jest się dumnym,
+potencjał na rozwój w przyszłości itp.
+Sprzedać kluczowe części (w moim przypadku generacja i weryfikacja). Te elementy można opisać dokładniej, reszta ogółami bo jest mało czasu.
+Prezentacja może być w dowolnej formie, ale do beamera nikt się nie przyczepi. Przy jasnych kolorach unikać niskiego kontrastu.
 
 ### Notes (2):
 Case study - mention that all commits are sent by the users before being sent to them and why one user's input is essentially random
@@ -105,4 +163,3 @@ https://pl.wikipedia.org/wiki/Protok%C3%B3%C5%82_Diffiego-Hellmana
 
 
 [x] server-side validation of user login data (size)
-

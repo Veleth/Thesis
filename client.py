@@ -87,7 +87,7 @@ class Client:
         """
         messages = decompose(data, self.key)
         for message in messages:
-            print(message)
+            print(message) #TODO: remove
             try:
                 m = list(filter(None, message.split(MESSAGE_DELIMITER)))
                 if m[0] in self.dispatch.keys():
@@ -114,8 +114,9 @@ class Client:
             self.gui.showInfo('Logout', 'You have successfully logged out!')
         except:
             logging.exception('RecvUnhandledException')
+            self.gui.logout(alert='An unexpected connection error has occured. You have been logged out.')
         finally:
-            print('Stopped accepting incoming messages')
+            print('Communication with the server was lost.')
 
     def clear(self):
         """

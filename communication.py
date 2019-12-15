@@ -84,6 +84,7 @@ def compose(header, args, key=None):
         message += MESSAGE_END.encode()
     else:
         message += MESSAGE_END
+        message = message.encode()
     return message
 
 def decompose(message, key=None):
@@ -100,8 +101,10 @@ def decompose(message, key=None):
     for msg in messages:
         if key:
             contents = decrypt(msg, key)
-        contents = contents.decode()
-        decomposed.append(contents)
+            contents = contents.decode()
+            decomposed.append(contents)
+        else:
+            decomposed.append(msg.decode())
     return decomposed
     
 def encrypt(message, key):

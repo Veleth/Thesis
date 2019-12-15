@@ -29,7 +29,7 @@ class GUI():
         Initializes basic window
         """
         self.window = Tk()
-        self.window.title('Login screen')
+        self.window.title('RPG player companion app')
         self.window.resizable(False,False)
         self.window.protocol('WM_DELETE_WINDOW', self.exit)
         canvas = Canvas(self.window, height=360, width=360)
@@ -378,7 +378,9 @@ class ApplicationFrame(Frame):
             messagebox.showerror('Input validation failed', f'Your input contains the following errors:\n{errors}')
         else:
             selection = list(self.userList.curselection()) 
-            selectedUsers = [self.userList.get(idx).strip() for idx in [selection if 0 in selection else [0] + selection]]
+            if 0 not in selection:
+                selection.append(0)
+            selectedUsers = [self.userList.get(idx).strip() for idx in selection]
             selectedUsers[0] = selectedUsers[0].rstrip('(GM)').strip()
             self.gui.startRoll(timeout, maxNum, selectedUsers)
 

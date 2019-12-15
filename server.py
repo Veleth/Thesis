@@ -353,8 +353,11 @@ class Server:
         """
         names = [player.name for player in players]
         pattern = re.compile(r'^{0}(_\d+)?$'.format(username))
-        return sum([1 if pattern.match(name) else 0 for name in names])
-    
+        num = sum([1 if pattern.match(name) else 0 for name in names])
+        while  f'username_{num}' in names:
+            num += 1
+        return num
+
     def findRoomNumber(self):
         """
         Helps with finding an unique number for a new room
