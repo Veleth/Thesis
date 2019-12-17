@@ -10,12 +10,6 @@ import threading, logging
 from communication import *
 from config import IPADDR, MIN_USERNAME_CHARS, MAX_USERNAME_CHARS, MIN_ROOM_NUMBER_CHARS, MAX_ROOM_NUMBER_CHARS
 
-#TODO: remove
-import hashlib
-import time
-import random
-
-
 class GUI():
     """
     GUI Class - responisble for the main window of the GUI
@@ -37,7 +31,6 @@ class GUI():
         
         self._frame = None
         self.switchFrame(LoginFrame)
-        self.launchClient(host=IPADDR, port=8000, username=str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]) , room='22')#TODO: Remove
         self.window.mainloop()
 
     def launchClient(self, host, port, username, room):
@@ -610,20 +603,14 @@ class LoginFrame(Frame):
         self.button = Button(self, text='Login', command=self.loginButtonClicked, font=('Helvetica', 16), anchor='center')
         self.button.place(rely=0.75, relx=0.3, relwidth=0.4, relheight=0.1)
         
-        # TODO: Later switch
-        # if self.gui.host:
-        #     self.entryHost.insert(0, self.gui.host)
-        # if self.gui.port:
-        #     self.entryPort.insert(0, self.gui.port)
-        # if self.gui.username:
-        #     self.entryUsername.insert(0, self.gui.username)
-        # if self.gui.room:
-        #     self.entryRoom.insert(0, self.gui.room)
-
-        self.entryHost.insert(0, IPADDR)
-        self.entryPort.insert(0, '8000')
-        self.entryUsername.insert(0, str(hashlib.sha256(str(time.time()+random.random()).encode()).hexdigest()[:5]))
-        self.entryRoom.insert(0, '22')
+        if hasattr(self.gui, 'host'):
+            self.entryHost.insert(0, self.gui.host)
+        if hasattr(self.gui, 'port'):
+            self.entryPort.insert(0, self.gui.port)
+        if hasattr(self.gui, 'username'):
+            self.entryUsername.insert(0, self.gui.username)
+        if hasattr(self.gui, 'room'):
+            self.entryRoom.insert(0, self.gui.room)
 
     def loginButtonClicked(self):
         """

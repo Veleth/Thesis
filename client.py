@@ -87,7 +87,6 @@ class Client:
         """
         messages = decompose(data, self.key)
         for message in messages:
-            print(message) #TODO: remove
             try:
                 m = list(filter(None, message.split(MESSAGE_DELIMITER)))
                 if m[0] in self.dispatch.keys():

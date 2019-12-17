@@ -142,7 +142,7 @@ class Server:
         messages = decompose(data, user.key)
         for message in messages:
             m = list(filter(None, message.split(MESSAGE_DELIMITER)))
-            print(m)
+            # print(m)
             if m[0] in self.dispatch.keys():
                 self.dispatch[m[0]](m, user)
             else:
@@ -280,7 +280,7 @@ class Server:
         Input: room
         """
         if len(room.getParticipants()) == len(room.getValues()):
-            print(f'DEBUG [VAL]: All values received')
+            print(f'All values received for room {room.number}')
             values = room.getValues()
             room.setState(State.RESULT)
             self.sendRoom(room, VAL_HEADER, values, room.getParticipants())
@@ -305,7 +305,7 @@ class Server:
         Input: room
         """
         if len(room.getParticipants()) == len(room.getResults()):
-            print(f'DEBUG [RES]: All results received')
+            print(f'All results received for room {room.number}')
             results = room.getResults()
             room.setState(State.IDLE)
             room.nextRollAfter = time.time()+5 if not room.problem else time.time()+15
